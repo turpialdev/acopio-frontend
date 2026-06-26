@@ -75,7 +75,6 @@ async function crear() {
 
   if (!form.estado) errores.value.estado = 'Selecciona un estado.'
   if (!form.municipio) errores.value.municipio = 'Selecciona un municipio.'
-  if (!form.categoria_principal) errores.value.categoria_principal = 'Selecciona una categoría.'
 
   if (!form.direccion.trim()) errores.value.direccion = 'La dirección es requerida.'
   else if (form.direccion.length > 500) errores.value.direccion = 'No puede superar los 500 caracteres.'
@@ -117,14 +116,16 @@ async function crear() {
       centroId: sesion.centro_id,
       etiqueta: sesion.etiqueta,
     })
-    try {
-      await necesidades.crearNecesidad({
-        centro_id: creado.id,
-        categoria_id: form.categoria_principal,
-        urgencia: 'media',
-      })
-    } catch {
-      /* la necesidad es secundaria; no bloquea el registro */
+    if (form.categoria_principal) {
+      try {
+        await necesidades.crearNecesidad({
+          centro_id: creado.id,
+          categoria_id: form.categoria_principal,
+          urgencia: 'media',
+        })
+      } catch {
+        /* la necesidad es secundaria; no bloquea el registro */
+      }
     }
 
     paso.value = 'codigo'
@@ -204,8 +205,7 @@ onMounted(async () => {
           />
           <SelectField
             v-model="form.categoria_principal"
-            label="Categoría principal"
-            required
+            label="Categoría principal (opcional)"
             placeholder="Tipo de insumos que reciben"
             :options="opcionesCategoria"
             :error="campoError('categoria_principal')"

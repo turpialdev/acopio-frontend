@@ -9,6 +9,9 @@ import type { Centro } from '@/types/domain'
 const props = defineProps<{ centro: Centro }>()
 
 const verif = computed(() => VERIFICACION_META[props.centro.estado_verificacion])
+const needsMeta = computed(
+  () => URGENCIA_META[props.centro.urgencia_maxima ?? 'urgente'] ?? URGENCIA_META.urgente,
+)
 const copiado = ref(false)
 
 function comoLlegar() {
@@ -72,7 +75,14 @@ async function copiarReporte() {
     </AppButton>
 
     <!-- Insumos requeridos -->
-    <section class="needs" :class="centro.necesidades.length ? 'needs--con-items' : 'needs--vacio'">
+    <section
+      class="needs"
+      :class="centro.necesidades.length ? 'needs--con-items' : 'needs--vacio'"
+      :style="centro.necesidades.length ? {
+        '--needs': `var(${needsMeta.varName})`,
+        '--needs-soft': `var(${needsMeta.varName}-soft)`,
+      } : {}"
+    >
       <p class="needs__head">Insumos requeridos</p>
       <p class="needs__updated">Actualizado: {{ fechaHora(centro.actualizado_en) }}</p>
       <ul v-if="centro.necesidades.length" class="needs__list">
@@ -202,12 +212,12 @@ async function copiarReporte() {
   border-radius: var(--r-md);
 }
 .needs--con-items {
-  background: var(--c-danger-soft);
-  border: 1px solid var(--c-danger);
+  background: var(--needs-soft, var(--c-danger-soft));
+  border: 1px solid var(--needs, var(--c-danger));
 }
 .needs--con-items .needs__head,
 .needs--con-items .needs__updated {
-  color: var(--c-danger);
+  color: var(--needs, var(--c-danger));
 }
 .needs--vacio {
   background: var(--c-success-soft);

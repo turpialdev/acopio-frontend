@@ -77,6 +77,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiere: 'moderador' },
   },
   {
+    path: '/moderacion/centros/nuevo',
+    name: 'mod-crear-centro',
+    component: () => import('@/views/panel/mod/ModCrearCentroView.vue'),
+    meta: { requiere: 'moderador' },
+  },
+  {
     path: '/moderacion/centros/:id',
     name: 'mod-centro',
     component: () => import('@/views/panel/mod/ModCentroDetailView.vue'),

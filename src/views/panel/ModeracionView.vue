@@ -8,6 +8,7 @@ const { sesion } = useAuth()
 
 const ACCIONES = [
   { label: 'Gestionar centros', desc: 'Verificar, ocultar y ver fichas', to: 'mod-centros' },
+  { label: 'Crear centro', desc: 'Registrar un nuevo centro verificado', to: 'mod-crear-centro' },
   { label: 'Reportes', desc: 'Atender reportes ciudadanos pendientes', to: 'mod-reportes' },
   { label: 'Administrar categorías', desc: 'Crear y activar categorías del catálogo', to: 'mod-catalogo' },
   { label: 'Administrar moderadores', desc: 'Agregar y eliminar cuentas del equipo', to: 'mod-moderadores' },
