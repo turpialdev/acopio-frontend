@@ -2,12 +2,12 @@
 defineProps<{
   label: string
   modelValue: string
-  type?: string
+  options: { value: string; label: string }[]
   placeholder?: string
   error?: string
   hint?: string
-  autocomplete?: string
   required?: boolean
+  disabled?: boolean
 }>()
 defineEmits<{ 'update:modelValue': [value: string] }>()
 </script>
@@ -18,16 +18,17 @@ defineEmits<{ 'update:modelValue': [value: string] }>()
       {{ label }}
       <span v-if="required" class="field__req" aria-hidden="true">*</span>
     </span>
-    <input
-      class="field__input"
+    <select
+      class="field__select"
       :class="{ 'has-error': error }"
-      :type="type ?? 'text'"
       :value="modelValue"
-      :placeholder="placeholder"
-      :autocomplete="autocomplete"
+      :disabled="disabled"
       :aria-invalid="!!error"
-      @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-    />
+      @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
+    >
+      <option value="">{{ placeholder ?? 'Selecciona una opción' }}</option>
+      <option v-for="o in options" :key="o.value" :value="o.value">{{ o.label }}</option>
+    </select>
     <span v-if="error" class="field__error">{{ error }}</span>
     <span v-else-if="hint" class="field__hint">{{ hint }}</span>
   </label>
@@ -47,18 +48,22 @@ defineEmits<{ 'update:modelValue': [value: string] }>()
 .field__req {
   color: var(--c-danger);
 }
-.field__input {
-  padding: var(--sp-2) var(--sp-3);
+.field__select {
+  padding: var(--sp-3);
   border: 1px solid var(--c-border-strong);
   border-radius: var(--r-md);
   background: var(--c-surface);
   transition: border-color 0.15s;
 }
-.field__input:focus {
+.field__select:focus {
   border-color: var(--c-primary-500);
   outline: none;
 }
-.field__input.has-error {
+.field__select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.field__select.has-error {
   border-color: var(--c-danger);
 }
 .field__error {

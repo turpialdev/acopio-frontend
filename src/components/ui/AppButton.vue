@@ -1,7 +1,7 @@
 <script setup lang="ts">
 withDefaults(
   defineProps<{
-    variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
+    variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'light' | 'outline'
     size?: 'sm' | 'md' | 'lg'
     block?: boolean
     type?: 'button' | 'submit'
@@ -100,6 +100,25 @@ withDefaults(
 .btn--danger {
   background: var(--c-danger);
   color: var(--c-text-invert);
+}
+
+/* Fondo blanco, texto azul — usado sobre el panel azul (Buscar/Limpiar). */
+.btn--light {
+  background: var(--c-surface);
+  color: var(--c-primary-600);
+}
+.btn--light:hover:not(:disabled) {
+  background: var(--c-primary-50);
+}
+
+/* Contorno azul — usado para "Ver Contactos", "Llamar" en contactos. */
+.btn--outline {
+  background: var(--c-surface);
+  border-color: var(--c-primary-500);
+  color: var(--c-primary-600);
+}
+.btn--outline:hover:not(:disabled) {
+  background: var(--c-primary-50);
 }
 
 .btn__spinner {

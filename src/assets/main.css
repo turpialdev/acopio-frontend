@@ -58,7 +58,8 @@ h2,
 h3,
 h4 {
   line-height: 1.25;
-  font-weight: var(--fw-semibold);
+  font-family: var(--font-serif);
+  font-weight: var(--fw-bold);
   color: var(--c-text);
 }
 
@@ -73,6 +74,14 @@ h4 {
   max-width: var(--container);
   margin: 0 auto;
   padding-inline: var(--sp-5);
+}
+
+/* Columna estrecha centrada — el diseño es mobile-first. */
+.content {
+  width: 100%;
+  max-width: var(--content);
+  margin: 0 auto;
+  padding-inline: var(--sp-4);
 }
 
 .visually-hidden {

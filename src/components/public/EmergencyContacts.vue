@@ -11,7 +11,7 @@ const cargando = ref(false)
 const error = ref('')
 const lista = ref<ContactoEmergencia[]>([])
 
-async function abrir() {
+async function alternar() {
   abierto.value = !abierto.value
   // La petición se hace solo la primera vez que se abre el panel.
   if (abierto.value && !cargado.value) {
@@ -31,25 +31,30 @@ async function abrir() {
 
 <template>
   <section class="emerg">
-    <button class="emerg__toggle" :aria-expanded="abierto" @click="abrir">
-      <span class="emerg__icon" aria-hidden="true">☎</span>
-      <span class="emerg__label">Contactos de emergencia</span>
-      <span class="emerg__chevron" :class="{ 'is-open': abierto }" aria-hidden="true">▾</span>
-    </button>
+    <header class="emerg__head">
+      <div>
+        <p class="emerg__eyebrow">Información útil</p>
+        <h2 class="emerg__title">Contactos de Emergencia</h2>
+      </div>
+      <AppButton variant="outline" size="sm" @click="alternar">
+        {{ abierto ? 'Ocultar Contactos' : 'Ver Contactos' }}
+      </AppButton>
+    </header>
 
-    <div v-if="abierto" class="emerg__panel">
+    <div v-if="abierto" class="emerg__body">
       <AppSpinner v-if="cargando" label="Cargando contactos…" />
       <p v-else-if="error" class="emerg__error">{{ error }}</p>
       <p v-else-if="!lista.length" class="emerg__empty">No hay contactos disponibles.</p>
       <ul v-else class="emerg__list">
         <li v-for="c in lista" :key="c.id" class="contact">
+          <span class="contact__icon" aria-hidden="true">☎</span>
           <div class="contact__info">
             <p class="contact__name">{{ c.nombre }}</p>
-            <p class="contact__type">{{ c.tipo }} · {{ c.zona }}</p>
+            <p class="contact__type">{{ c.tipo }}</p>
           </div>
           <div class="contact__actions">
             <a v-if="c.telefonos[0]" :href="`tel:${c.telefonos[0]}`">
-              <AppButton variant="secondary" size="sm">Llamar</AppButton>
+              <AppButton variant="outline" size="sm">Llamar</AppButton>
             </a>
             <a v-if="c.whatsapp_url" :href="c.whatsapp_url" target="_blank" rel="noopener">
               <AppButton variant="ghost" size="sm">WhatsApp</AppButton>
@@ -63,75 +68,67 @@ async function abrir() {
 
 <style scoped>
 .emerg {
+  padding: var(--sp-4) var(--sp-5);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--r-lg);
-  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
-.emerg__toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  width: 100%;
-  padding: var(--sp-4) var(--sp-5);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: var(--fs-base);
-  font-weight: var(--fw-semibold);
-  text-align: left;
-}
-.emerg__icon {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--r-md);
-  background: var(--c-danger-soft);
-  color: var(--c-danger);
-}
-.emerg__label {
-  flex: 1;
-}
-.emerg__chevron {
-  transition: transform 0.2s;
-  color: var(--c-text-muted);
-}
-.emerg__chevron.is-open {
-  transform: rotate(180deg);
-}
-.emerg__panel {
-  padding: 0 var(--sp-5) var(--sp-4);
-  border-top: 1px solid var(--c-border);
-}
-.emerg__error {
-  padding: var(--sp-4) 0;
-  color: var(--c-danger);
-  font-size: var(--fs-sm);
-}
-.emerg__empty {
-  padding: var(--sp-4) 0;
-  color: var(--c-text-muted);
-  font-size: var(--fs-sm);
-}
-.emerg__list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-}
-.contact {
+.emerg__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
-  padding: var(--sp-3) 0;
-  border-bottom: 1px solid var(--c-border);
 }
-.contact:last-child {
-  border-bottom: none;
+.emerg__eyebrow {
+  font-size: var(--fs-xs);
+  color: var(--c-text-faint);
+}
+.emerg__title {
+  font-size: var(--fs-lg);
+}
+.emerg__body {
+  margin-top: var(--sp-4);
+}
+.emerg__error {
+  color: var(--c-danger);
+  font-size: var(--fs-sm);
+}
+.emerg__empty {
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+.emerg__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  list-style: none;
+}
+.contact {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+}
+.contact__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--c-primary-50);
+  color: var(--c-primary-600);
+  font-size: 1.1rem;
+}
+.contact__info {
+  flex: 1;
+  min-width: 0;
 }
 .contact__name {
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 .contact__type {
   font-size: var(--fs-sm);
@@ -140,5 +137,6 @@ async function abrir() {
 .contact__actions {
   display: flex;
   gap: var(--sp-2);
+  flex-shrink: 0;
 }
 </style>

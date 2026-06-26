@@ -1,13 +1,33 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/ui/AppButton.vue'
 import TextField from '@/components/ui/TextField.vue'
+import PageHero from '@/components/layout/PageHero.vue'
+import IconPersonAdd from '@/components/icons/IconPersonAdd.vue'
 import { auth as authApi, ApiError } from '@/api'
 import { useAuth } from '@/composables/useAuth'
 
+const route = useRoute()
 const router = useRouter()
 const { iniciarSesionCodigo } = useAuth()
+
+// El endpoint es el mismo; el rol lo decide el servidor. El `rol` de la query
+// sólo personaliza los textos de la pantalla.
+const esVoluntario = computed(() => route.query.rol === 'voluntario')
+const copy = computed(() =>
+  esVoluntario.value
+    ? {
+        title: 'Administración Voluntario',
+        subtitle: 'Ingresa el código que recibiste al registrar tu centro de acopio.',
+        cta: 'Entrar al Panel',
+      }
+    : {
+        title: 'Administrar mi centro',
+        subtitle: 'Ingresa el código que recibiste al registrar tu centro de acopio.',
+        cta: 'Entrar al Panel',
+      },
+)
 
 const codigo = ref('')
 const error = ref('')
@@ -44,25 +64,24 @@ async function enviar() {
 </script>
 
 <template>
-  <div class="auth">
-    <div class="auth__card">
-      <h1 class="auth__title">Acceso con código</h1>
-      <p class="auth__lead">
-        Ingresa el código de gestión que recibiste. Te llevará al inventario de tu centro.
-      </p>
+  <div>
+    <PageHero :title="copy.title" :subtitle="copy.subtitle">
+      <template #icon><IconPersonAdd /></template>
+    </PageHero>
 
-      <form class="auth__form" @submit.prevent="enviar">
+    <div class="content page-pad">
+      <form class="card" @submit.prevent="enviar">
         <TextField
           v-model="codigo"
-          label="Código de acceso"
+          label="Código de verificación"
           placeholder="AX-1234-5678-0"
           autocomplete="off"
           :error="error"
         />
-        <AppButton type="submit" block size="lg" :loading="enviando">Ingresar</AppButton>
+        <AppButton type="submit" block size="lg" :loading="enviando">{{ copy.cta }}</AppButton>
       </form>
 
-      <p class="auth__alt">
+      <p class="alt">
         ¿Aún no tienes un centro?
         <RouterLink :to="{ name: 'registrar' }">Regístralo aquí</RouterLink>
       </p>
@@ -71,35 +90,20 @@ async function enviar() {
 </template>
 
 <style scoped>
-.auth {
-  display: flex;
-  justify-content: center;
-  padding: var(--sp-12) var(--sp-5);
+.page-pad {
+  padding-block: var(--sp-6) var(--sp-10);
 }
-.auth__card {
-  width: 100%;
-  max-width: 420px;
-  padding: var(--sp-8);
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-md);
-}
-.auth__title {
-  font-size: var(--fs-2xl);
-}
-.auth__lead {
-  margin-top: var(--sp-2);
-  color: var(--c-text-muted);
-  font-size: var(--fs-sm);
-}
-.auth__form {
+.card {
   display: flex;
   flex-direction: column;
   gap: var(--sp-5);
-  margin-top: var(--sp-6);
+  padding: var(--sp-5);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
 }
-.auth__alt {
+.alt {
   margin-top: var(--sp-5);
   font-size: var(--fs-sm);
   color: var(--c-text-muted);

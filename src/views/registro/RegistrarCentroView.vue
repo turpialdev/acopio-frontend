@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppButton from '@/components/ui/AppButton.vue'
 import TextField from '@/components/ui/TextField.vue'
+import SelectField from '@/components/ui/SelectField.vue'
+import PageHero from '@/components/layout/PageHero.vue'
+import IconPersonAdd from '@/components/icons/IconPersonAdd.vue'
 import { auth as authApi, catalogo, centros as centrosApi, necesidades, ApiError } from '@/api'
 import { useAuth } from '@/composables/useAuth'
-import type { CargoResponsable, Categoria, Urgencia } from '@/types/domain'
+import { ESTADOS_VENEZUELA, municipiosDe } from '@/lib/venezuela'
+import type { CargoResponsable } from '@/types/domain'
 
 const router = useRouter()
 const { iniciarSesionCodigo } = useAuth()
@@ -24,41 +28,63 @@ const form = reactive({
   nombre: '',
   estado: '',
   municipio: '',
+  categoria_principal: '',
   direccion: '',
   nombre_responsable: '',
   telefono_responsable: '',
-  cargo_responsable: 'director' as CargoResponsable,
+  cargo_responsable: '',
 })
+
+// Opciones para los selects.
+const opcionesEstado = ESTADOS_VENEZUELA.map((e) => ({ value: e, label: e }))
+const opcionesMunicipio = computed(() =>
+  municipiosDe(form.estado).map((m) => ({ value: m, label: m })),
+)
+const opcionesCategoria = ref<{ value: string; label: string }[]>([])
+
+// Al cambiar de estado, el municipio previo deja de ser válido.
+watch(
+  () => form.estado,
+  () => {
+    form.municipio = ''
+  },
+)
 
 const errores = ref<Record<string, string>>({})
 const errorGeneral = ref('')
 const enviando = ref(false)
 
-// Resultado del paso 1
+// Resultado del registro.
 const codigoRaiz = ref('')
-const centroId = ref('')
 const copiado = ref(false)
-
-// Necesidad principal (opcional)
-const categorias = ref<Categoria[]>([])
-const categoriaSel = ref('')
-const urgenciaSel = ref<Urgencia>('media')
-const guardandoNecesidad = ref(false)
 
 function campoError(campo: string): string {
   return errores.value[campo] ?? ''
 }
 
 async function crear() {
-  enviando.value = true
+  // Validación de campos que no son del centro (no los valida el backend).
   errores.value = {}
   errorGeneral.value = ''
-  try {
-    const creado = await centrosApi.crearCentro({ ...form })
-    codigoRaiz.value = creado.codigo_raiz
-    centroId.value = creado.id
+  if (!form.categoria_principal) errores.value.categoria_principal = 'Selecciona una categoría.'
+  if (!form.cargo_responsable) errores.value.cargo_responsable = 'Selecciona un cargo.'
+  if (!form.municipio) errores.value.municipio = 'Selecciona un municipio.'
+  if (Object.keys(errores.value).length) return
 
-    // Canjear el código raíz por un JWT para poder crear la necesidad.
+  enviando.value = true
+  try {
+    const creado = await centrosApi.crearCentro({
+      nombre: form.nombre,
+      estado: form.estado,
+      municipio: form.municipio,
+      direccion: form.direccion,
+      nombre_responsable: form.nombre_responsable,
+      telefono_responsable: form.telefono_responsable,
+      cargo_responsable: form.cargo_responsable as CargoResponsable,
+    })
+    codigoRaiz.value = creado.codigo_raiz
+
+    // Canjear el código raíz por un JWT y registrar la necesidad principal.
     const sesion = await authApi.loginConCodigo(creado.codigo_raiz)
     iniciarSesionCodigo({
       token: sesion.token,
@@ -66,13 +92,17 @@ async function crear() {
       centroId: sesion.centro_id,
       etiqueta: sesion.etiqueta,
     })
+    try {
+      await necesidades.crearNecesidad({
+        centro_id: creado.id,
+        categoria_id: form.categoria_principal,
+        urgencia: 'media',
+      })
+    } catch {
+      /* la necesidad es secundaria; no bloquea el registro */
+    }
 
     paso.value = 'codigo'
-    // Cargar categorías para la necesidad principal opcional.
-    catalogo
-      .listarCategorias({ es_insumo: true, activa: true })
-      .then((c) => (categorias.value = c))
-      .catch(() => {})
   } catch (e) {
     if (e instanceof ApiError && e.fields) {
       errores.value = Object.fromEntries(
@@ -98,133 +128,119 @@ async function copiarCodigo() {
   }
 }
 
-async function finalizar() {
-  // Si eligió una categoría principal, registra la necesidad.
-  if (categoriaSel.value) {
-    guardandoNecesidad.value = true
-    try {
-      await necesidades.crearNecesidad({
-        centro_id: centroId.value,
-        categoria_id: categoriaSel.value,
-        urgencia: urgenciaSel.value,
-      })
-    } catch {
-      /* no bloqueamos el flujo si falla la necesidad opcional */
-    } finally {
-      guardandoNecesidad.value = false
-    }
+onMounted(async () => {
+  try {
+    const cats = await catalogo.listarCategorias({ es_insumo: true, activa: true })
+    opcionesCategoria.value = cats.map((c) => ({ value: c.id, label: c.nombre }))
+  } catch {
+    /* sin catálogo el usuario igual puede registrar */
   }
-  router.push({ name: 'panel-centro' })
-}
+})
 </script>
 
 <template>
-  <div class="reg container">
-    <!-- PASO 1: formulario -->
-    <form v-if="paso === 'formulario'" class="reg__card" @submit.prevent="crear">
-      <header class="reg__head">
-        <h1 class="reg__title">Registrar centro de acopio</h1>
-        <p class="reg__lead">
-          Crea la ficha pública de tu centro. Al terminar recibirás un código de acceso
-          <strong>que se muestra una sola vez</strong>.
-        </p>
-      </header>
+  <div>
+    <PageHero
+      title="Registrar Centro"
+      subtitle="No necesitas contraseña. Recibirás un Código Raíz para acceder."
+    >
+      <template #icon><IconPersonAdd /></template>
+    </PageHero>
 
-      <div class="reg__grid">
-        <TextField
-          v-model="form.nombre"
-          label="Nombre del centro"
-          required
-          :error="campoError('nombre')"
-          placeholder="Centro Comunitario La Vega"
-        />
-        <TextField
-          v-model="form.direccion"
-          label="Dirección"
-          required
-          :error="campoError('direccion')"
-          placeholder="Calle 5, sector Los Pinos"
-        />
-        <TextField
-          v-model="form.estado"
-          label="Estado"
-          required
-          :error="campoError('estado')"
-          placeholder="Miranda"
-        />
-        <TextField
-          v-model="form.municipio"
-          label="Municipio"
-          required
-          :error="campoError('municipio')"
-          placeholder="Libertador"
-        />
-        <TextField
-          v-model="form.nombre_responsable"
-          label="Nombre del responsable"
-          required
-          :error="campoError('nombre_responsable')"
-        />
-        <TextField
-          v-model="form.telefono_responsable"
-          label="Teléfono del responsable"
-          required
-          :error="campoError('telefono_responsable')"
-          placeholder="+58 212 000-0000"
-        />
-        <label class="field">
-          <span class="field__label">Cargo del responsable</span>
-          <select v-model="form.cargo_responsable" class="field__select">
-            <option v-for="c in CARGOS" :key="c.value" :value="c.value">{{ c.label }}</option>
-          </select>
-        </label>
-      </div>
+    <div class="content page-pad">
+      <!-- PASO 1: formulario -->
+      <form v-if="paso === 'formulario'" class="form" @submit.prevent="crear">
+        <fieldset class="section">
+          <legend class="section__title">Datos del centro</legend>
+          <TextField
+            v-model="form.nombre"
+            label="Nombre del centro"
+            required
+            placeholder="Ej: Centro Comunitario La Vega"
+            :error="campoError('nombre')"
+          />
+          <SelectField
+            v-model="form.estado"
+            label="Estado"
+            required
+            placeholder="Selecciona un Estado"
+            :options="opcionesEstado"
+            :error="campoError('estado')"
+          />
+          <SelectField
+            v-model="form.municipio"
+            label="Municipio"
+            required
+            :disabled="!form.estado"
+            :placeholder="form.estado ? 'Selecciona un Municipio' : 'Selecciona un Estado primero'"
+            :options="opcionesMunicipio"
+            :error="campoError('municipio')"
+          />
+          <SelectField
+            v-model="form.categoria_principal"
+            label="Categoría principal"
+            required
+            placeholder="Tipo de insumos que reciben"
+            :options="opcionesCategoria"
+            :error="campoError('categoria_principal')"
+          />
+          <TextField
+            v-model="form.direccion"
+            label="Dirección"
+            required
+            placeholder="Calle, sector, referencia"
+            hint="Referencia que permita ubicar el centro físicamente"
+            :error="campoError('direccion')"
+          />
+        </fieldset>
 
-      <p v-if="errorGeneral" class="reg__error">{{ errorGeneral }}</p>
+        <fieldset class="section">
+          <legend class="section__title">Datos del responsable</legend>
+          <TextField
+            v-model="form.nombre_responsable"
+            label="Nombre completo"
+            required
+            placeholder="Nombre y apellido"
+            :error="campoError('nombre_responsable')"
+          />
+          <TextField
+            v-model="form.telefono_responsable"
+            label="Teléfono de contacto"
+            required
+            placeholder="+58 212 000-0000"
+            :error="campoError('telefono_responsable')"
+          />
+          <SelectField
+            v-model="form.cargo_responsable"
+            label="Cargo"
+            required
+            placeholder="Selecciona tu cargo"
+            :options="CARGOS"
+            :error="campoError('cargo_responsable')"
+          />
+        </fieldset>
 
-      <div class="reg__actions">
-        <AppButton variant="ghost" @click="router.push({ name: 'home' })">Cancelar</AppButton>
-        <AppButton type="submit" size="lg" :loading="enviando">Registrar centro</AppButton>
-      </div>
-    </form>
+        <p v-if="errorGeneral" class="form__error">{{ errorGeneral }}</p>
 
-    <!-- PASO 2: código raíz + necesidad principal -->
-    <div v-else class="reg__card">
-      <header class="reg__head">
-        <h1 class="reg__title">¡Centro registrado!</h1>
-        <p class="reg__lead">
-          Guarda este código en un lugar seguro. Es la llave de acceso de tu centro y
-          <strong>no se volverá a mostrar</strong>.
-        </p>
-      </header>
+        <AppButton type="submit" block size="lg" :loading="enviando">Registrar Centro</AppButton>
+      </form>
 
-      <div class="codigo">
-        <code class="codigo__value">{{ codigoRaiz }}</code>
-        <AppButton variant="secondary" size="sm" @click="copiarCodigo">
-          {{ copiado ? 'Copiado ✓' : 'Copiar' }}
-        </AppButton>
-      </div>
-
-      <div class="necesidad">
-        <h2 class="necesidad__title">¿Qué insumo necesitas con más urgencia?</h2>
-        <p class="necesidad__hint">Opcional — puedes agregar más insumos desde tu panel.</p>
-        <div class="necesidad__row">
-          <select v-model="categoriaSel" class="field__select">
-            <option value="">Sin definir por ahora</option>
-            <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
-              {{ cat.nombre }}
-            </option>
-          </select>
-          <select v-model="urgenciaSel" class="field__select" :disabled="!categoriaSel">
-            <option value="urgente">Urgente</option>
-            <option value="media">Media</option>
-            <option value="leve">Leve</option>
-          </select>
+      <!-- PASO 2: código raíz -->
+      <div v-else class="form">
+        <div class="done">
+          <h2 class="done__title">¡Centro registrado!</h2>
+          <p class="done__lead">
+            Guarda este código en un lugar seguro. Es la llave de acceso de tu centro y
+            <strong>no se volverá a mostrar</strong>.
+          </p>
+          <div class="codigo">
+            <code class="codigo__value">{{ codigoRaiz }}</code>
+            <AppButton variant="outline" size="sm" @click="copiarCodigo">
+              {{ copiado ? 'Copiado ✓' : 'Copiar' }}
+            </AppButton>
+          </div>
         </div>
-      </div>
-
-      <div class="reg__actions">
-        <AppButton size="lg" :loading="guardandoNecesidad" @click="finalizar">
+        <AppButton block size="lg" @click="router.push({ name: 'panel-centro' })">
           Ir a mi panel
         </AppButton>
       </div>
@@ -233,71 +249,60 @@ async function finalizar() {
 </template>
 
 <style scoped>
-.reg {
-  padding-block: var(--sp-10);
-  display: flex;
-  justify-content: center;
+.page-pad {
+  padding-block: var(--sp-6) var(--sp-10);
 }
-.reg__card {
-  width: 100%;
-  max-width: 720px;
-  padding: var(--sp-8);
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-width: 0;
+  padding: var(--sp-5);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
-.reg__title {
-  font-size: var(--fs-2xl);
+.section__title {
+  padding: 0;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-faint);
 }
-.reg__lead {
-  margin-top: var(--sp-2);
-  color: var(--c-text-muted);
-  font-size: var(--fs-sm);
-}
-.reg__grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--sp-4);
-  margin-top: var(--sp-6);
-}
-.reg__grid > :nth-child(1),
-.reg__grid > :nth-child(2) {
-  grid-column: 1 / -1;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-}
-.field__label {
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-}
-.field__select {
-  padding: var(--sp-2) var(--sp-3);
-  border: 1px solid var(--c-border-strong);
-  border-radius: var(--r-md);
-  background: var(--c-surface);
-}
-.reg__error {
-  margin-top: var(--sp-4);
+.form__error {
   color: var(--c-danger);
   font-size: var(--fs-sm);
 }
-.reg__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--sp-3);
-  margin-top: var(--sp-6);
-}
 
+/* Paso 2 */
+.done {
+  padding: var(--sp-5);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.done__title {
+  font-size: var(--fs-xl);
+}
+.done__lead {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+}
 .codigo {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
-  margin-top: var(--sp-6);
+  margin-top: var(--sp-4);
   padding: var(--sp-4);
   background: var(--c-primary-50);
   border: 1px dashed var(--c-primary-300);
@@ -309,31 +314,5 @@ async function finalizar() {
   font-weight: var(--fw-semibold);
   word-break: break-all;
   color: var(--c-primary-700);
-}
-.necesidad {
-  margin-top: var(--sp-6);
-  padding-top: var(--sp-6);
-  border-top: 1px solid var(--c-border);
-}
-.necesidad__title {
-  font-size: var(--fs-lg);
-}
-.necesidad__hint {
-  font-size: var(--fs-sm);
-  color: var(--c-text-muted);
-  margin-bottom: var(--sp-3);
-}
-.necesidad__row {
-  display: flex;
-  gap: var(--sp-3);
-}
-.necesidad__row .field__select {
-  flex: 1;
-}
-
-@media (max-width: 560px) {
-  .reg__grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

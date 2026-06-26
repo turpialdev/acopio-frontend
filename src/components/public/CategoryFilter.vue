@@ -16,7 +16,7 @@ defineEmits<{ 'update:modelValue': [value: string | null] }>()
       :class="{ 'is-active': modelValue === null }"
       @click="$emit('update:modelValue', null)"
     >
-      Todas
+      Todo
     </button>
     <button
       v-for="cat in categorias"
@@ -33,8 +33,16 @@ defineEmits<{ 'update:modelValue': [value: string | null] }>()
 <style scoped>
 .pills {
   display: flex;
-  flex-wrap: wrap;
   gap: var(--sp-2);
+  overflow-x: auto;
+  padding-bottom: var(--sp-1);
+  scrollbar-width: none;
+}
+.pills::-webkit-scrollbar {
+  display: none;
+}
+.pill {
+  flex-shrink: 0;
 }
 .pill {
   padding: var(--sp-1) var(--sp-3);

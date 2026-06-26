@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppSpinner from '@/components/ui/AppSpinner.vue'
@@ -8,7 +8,8 @@ import CategoryFilter from '@/components/public/CategoryFilter.vue'
 import CentroCard from '@/components/public/CentroCard.vue'
 import EmergencyContacts from '@/components/public/EmergencyContacts.vue'
 import { catalogo, centros as centrosApi, ApiError } from '@/api'
-import type { Categoria, Centro, Urgencia } from '@/types/domain'
+import { ESTADOS_VENEZUELA, municipiosDe } from '@/lib/venezuela'
+import type { Categoria, Centro } from '@/types/domain'
 
 const router = useRouter()
 
@@ -17,18 +18,28 @@ const lista = ref<Centro[]>([])
 const cargando = ref(true)
 const error = ref('')
 
-// --- Filtros ---
+// Filtros del panel azul (se aplican al pulsar "Buscar").
 const busqueda = ref('')
+const estadoSel = ref('')
+const municipioSel = ref('')
+// Filtro de píldoras (se aplica de inmediato).
 const categoriaSel = ref<string | null>(null)
-const urgenciaSel = ref<Urgencia | null>(null)
 
-const URGENCIAS: { value: Urgencia; label: string }[] = [
-  { value: 'urgente', label: 'Urgente' },
-  { value: 'media', label: 'Media' },
-  { value: 'leve', label: 'Leve' },
-]
+// Municipios disponibles según el estado elegido.
+const municipios = computed(() => municipiosDe(estadoSel.value))
+// Al cambiar de estado, el municipio previo deja de ser válido.
+watch(estadoSel, () => {
+  municipioSel.value = ''
+})
 
-let debounce: ReturnType<typeof setTimeout> | undefined
+// Los tres accesos del diseño. El comportamiento exacto está por definir;
+// voluntario y responsable canjean un código, el moderador usa email/clave.
+const ACCESOS = [
+  { label: 'Voluntario', to: { name: 'acceder', query: { rol: 'voluntario' } } },
+  { label: 'Responsable', to: { name: 'acceder', query: { rol: 'responsable' } } },
+  { label: 'Moderador', to: { name: 'moderador' } },
+] as const
+
 let peticion = 0
 
 async function buscar() {
@@ -38,8 +49,9 @@ async function buscar() {
   try {
     const data = await centrosApi.listarCentros({
       q: busqueda.value || undefined,
+      estado: estadoSel.value || undefined,
+      municipio: municipioSel.value || undefined,
       categoria: categoriaSel.value ?? undefined,
-      urgencia: urgenciaSel.value ?? undefined,
     })
     if (turno !== peticion) return // descarta respuestas obsoletas
     lista.value = data
@@ -51,22 +63,22 @@ async function buscar() {
   }
 }
 
-// Texto: con debounce. Pills: inmediato.
-watch(busqueda, () => {
-  clearTimeout(debounce)
-  debounce = setTimeout(buscar, 350)
-})
-watch([categoriaSel, urgenciaSel], buscar)
-
-function alternarUrgencia(u: Urgencia) {
-  urgenciaSel.value = urgenciaSel.value === u ? null : u
+function limpiar() {
+  busqueda.value = ''
+  estadoSel.value = ''
+  municipioSel.value = ''
+  categoriaSel.value = null
+  buscar()
 }
+
+// Las píldoras de categoría re-buscan al instante.
+watch(categoriaSel, buscar)
 
 onMounted(async () => {
   try {
     categorias.value = await catalogo.listarCategorias({ es_insumo: true, activa: true })
   } catch {
-    /* el filtro de categorías es opcional; si falla, seguimos sin pills */
+    /* el filtro de categorías es opcional */
   }
   await buscar()
 })
@@ -74,64 +86,68 @@ onMounted(async () => {
 
 <template>
   <div class="dir">
-    <!-- Hero + accesos -->
-    <section class="hero">
-      <div class="container hero__inner">
-        <h1 class="hero__title">Directorio de centros de acopio</h1>
-        <p class="hero__subtitle">
-          Encuentra centros activos cerca de ti, revisa qué insumos necesitan y cómo
-          contactarlos.
-        </p>
+    <div class="content dir__col">
+      <!-- Tres accesos -->
+      <nav class="accesos" aria-label="Acceso">
+        <AppButton
+          v-for="a in ACCESOS"
+          :key="a.label"
+          variant="primary"
+          @click="router.push(a.to)"
+        >
+          {{ a.label }}
+        </AppButton>
+      </nav>
 
-        <div class="hero__access">
-          <AppButton variant="primary" size="lg" @click="router.push({ name: 'registrar' })">
-            Registrar un centro
-          </AppButton>
-          <AppButton variant="secondary" size="lg" @click="router.push({ name: 'acceder' })">
-            Tengo un código de acceso
-          </AppButton>
-          <AppButton variant="ghost" size="lg" @click="router.push({ name: 'moderador' })">
-            Soy moderador
-          </AppButton>
-        </div>
-      </div>
-    </section>
+      <!-- Panel de búsqueda -->
+      <section class="panel">
+        <h2 class="panel__title">Buscar centros de acopio registrados</h2>
 
-    <div class="container dir__body">
-      <!-- Búsqueda y filtros -->
-      <div class="filters">
-        <div class="search">
-          <span class="search__icon" aria-hidden="true">⌕</span>
+        <div class="panel__search">
+          <span class="panel__search-icon" aria-hidden="true">⌕</span>
           <input
             v-model="busqueda"
-            class="search__input"
+            class="panel__input"
             type="search"
-            placeholder="Buscar por nombre del centro…"
+            placeholder="Buscar centros o ubicación…"
             aria-label="Buscar centros"
+            @keyup.enter="buscar"
           />
         </div>
 
-        <CategoryFilter
-          v-if="categorias.length"
-          v-model="categoriaSel"
-          :categorias="categorias"
-        />
+        <label class="panel__field">
+          <span class="panel__label">Estado <span class="req">*</span></span>
+          <select v-model="estadoSel" class="panel__control">
+            <option value="">Selecciona un Estado</option>
+            <option v-for="e in ESTADOS_VENEZUELA" :key="e" :value="e">{{ e }}</option>
+          </select>
+        </label>
 
-        <div class="urg">
-          <span class="urg__label">Urgencia:</span>
-          <button
-            v-for="u in URGENCIAS"
-            :key="u.value"
-            class="urg__chip"
-            :class="[`urg__chip--${u.value}`, { 'is-active': urgenciaSel === u.value }]"
-            @click="alternarUrgencia(u.value)"
-          >
-            {{ u.label }}
-          </button>
+        <label class="panel__field">
+          <span class="panel__label">Municipio <span class="req">*</span></span>
+          <select v-model="municipioSel" class="panel__control" :disabled="!estadoSel">
+            <option value="">
+              {{ estadoSel ? 'Selecciona un Municipio' : 'Selecciona un Estado primero' }}
+            </option>
+            <option v-for="m in municipios" :key="m" :value="m">{{ m }}</option>
+          </select>
+        </label>
+
+        <div class="panel__actions">
+          <AppButton variant="light" block @click="buscar">Buscar</AppButton>
+          <AppButton variant="light" block @click="limpiar">Limpiar</AppButton>
         </div>
-      </div>
+      </section>
 
-      <EmergencyContacts class="dir__emerg" />
+      <!-- Píldoras de categoría -->
+      <CategoryFilter
+        v-if="categorias.length"
+        v-model="categoriaSel"
+        :categorias="categorias"
+      />
+
+      <!-- Contactos de emergencia -->
+      <EmergencyContacts />
 
       <!-- Resultados -->
       <AppSpinner v-if="cargando" label="Cargando centros…" />
@@ -144,20 +160,19 @@ onMounted(async () => {
         :description="error"
       >
         <template #action>
-          <AppButton variant="secondary" @click="buscar">Reintentar</AppButton>
+          <AppButton variant="primary" @click="buscar">Reintentar</AppButton>
         </template>
       </EmptyState>
 
-      <EmptyState
-        v-else-if="!lista.length"
-        icon="🔍"
-        title="Sin resultados"
-        description="No hay centros que coincidan con los filtros aplicados."
-      />
-
       <template v-else>
-        <p class="dir__count">{{ lista.length }} centro{{ lista.length === 1 ? '' : 's' }}</p>
-        <div class="grid">
+        <h2 class="dir__count">Centros Activos ({{ lista.length }})</h2>
+        <EmptyState
+          v-if="!lista.length"
+          icon="🔍"
+          title="Sin resultados"
+          description="No hay centros que coincidan con los filtros aplicados."
+        />
+        <div v-else class="dir__list">
           <CentroCard v-for="c in lista" :key="c.id" :centro="c" />
         </div>
       </template>
@@ -166,48 +181,41 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.hero {
-  background: linear-gradient(180deg, var(--c-primary-50), var(--c-bg));
-  border-bottom: 1px solid var(--c-border);
+.dir {
+  padding-block: var(--sp-5) var(--sp-10);
 }
-.hero__inner {
-  padding-block: var(--sp-12);
-  text-align: center;
-}
-.hero__title {
-  font-size: var(--fs-3xl);
-  font-weight: var(--fw-bold);
-}
-.hero__subtitle {
-  max-width: 52ch;
-  margin: var(--sp-3) auto 0;
-  color: var(--c-text-muted);
-  font-size: var(--fs-lg);
-}
-.hero__access {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--sp-3);
-  margin-top: var(--sp-6);
-}
-
-.dir__body {
-  padding-block: var(--sp-8);
+.dir__col {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-6);
+  gap: var(--sp-5);
 }
 
-.filters {
+/* Tres accesos */
+.accesos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-3);
+}
+
+/* Panel azul de búsqueda */
+.panel {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
+  padding: var(--sp-5);
+  border-radius: var(--r-xl);
+  background: linear-gradient(160deg, var(--c-primary-600), var(--c-primary-800));
+  color: var(--c-text-invert);
+  box-shadow: var(--shadow-md);
 }
-.search {
+.panel__title {
+  font-size: var(--fs-lg);
+  color: var(--c-text-invert);
+}
+.panel__search {
   position: relative;
 }
-.search__icon {
+.panel__search-icon {
   position: absolute;
   left: var(--sp-3);
   top: 50%;
@@ -215,59 +223,56 @@ onMounted(async () => {
   color: var(--c-text-faint);
   font-size: 1.2rem;
 }
-.search__input {
+.panel__input {
   width: 100%;
   padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-8);
-  border: 1px solid var(--c-border-strong);
+  border: none;
   border-radius: var(--r-md);
   background: var(--c-surface);
+  color: var(--c-text);
 }
-.search__input:focus {
-  outline: none;
-  border-color: var(--c-primary-500);
-}
-
-.urg {
+.panel__field {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--sp-2);
 }
-.urg__label {
+.panel__label {
   font-size: var(--fs-sm);
-  color: var(--c-text-muted);
+  font-weight: var(--fw-medium);
 }
-.urg__chip {
-  padding: var(--sp-1) var(--sp-3);
-  border: 1px solid var(--c-border-strong);
-  border-radius: var(--r-full);
+.req {
+  color: #ffd1d1;
+}
+.panel__control {
+  width: 100%;
+  padding: var(--sp-3);
+  border: none;
+  border-radius: var(--r-md);
   background: var(--c-surface);
-  font-size: var(--fs-sm);
-  cursor: pointer;
+  color: var(--c-text);
 }
-.urg__chip.is-active.urg__chip--urgente {
-  background: var(--c-urgente);
-  border-color: var(--c-urgente);
-  color: #fff;
+.panel__control:focus {
+  outline: 2px solid var(--c-primary-300);
 }
-.urg__chip.is-active.urg__chip--media {
-  background: var(--c-media);
-  border-color: var(--c-media);
-  color: #fff;
+.panel__control:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
-.urg__chip.is-active.urg__chip--leve {
-  background: var(--c-leve);
-  border-color: var(--c-leve);
-  color: #fff;
+.panel__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  margin-top: var(--sp-1);
 }
 
+/* Resultados */
 .dir__count {
-  font-size: var(--fs-sm);
-  color: var(--c-text-muted);
+  font-size: var(--fs-xl);
+  margin-top: var(--sp-2);
 }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--sp-5);
+.dir__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
 }
 </style>
