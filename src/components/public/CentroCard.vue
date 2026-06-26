@@ -62,22 +62,34 @@ async function copiarReporte() {
 
     <!-- Información del centro -->
     <div class="info">
-      <div v-if="centro.contacto" class="info__field">
-        <span class="info__label">Número de contacto</span>
-        <a :href="`tel:${centro.contacto}`" class="info__value info__tel">{{ centro.contacto }}</a>
+      <!-- Fila 2 columnas: contacto | responsable -->
+      <div class="info__row2">
+        <div v-if="centro.contacto" class="info__field">
+          <span class="info__label">Números de contacto</span>
+          <a :href="`tel:${centro.contacto}`" class="info__value info__tel">{{ centro.contacto }}</a>
+        </div>
+        <div v-if="centro.nombre_responsable" class="info__field">
+          <span class="info__label">Responsable</span>
+          <p class="info__value">
+            {{ centro.nombre_responsable }}
+            <span v-if="centro.cargo_responsable" class="info__cargo">· {{ CARGO_LABEL[centro.cargo_responsable] }}</span>
+          </p>
+        </div>
       </div>
+
+      <!-- Dirección -->
       <div class="info__field">
         <span class="info__label">Dirección</span>
         <p class="info__value">{{ centro.direccion }}, {{ centro.municipio }}, {{ centro.estado }}</p>
       </div>
-      <div v-if="centro.nombre_responsable" class="info__field">
-        <span class="info__label">Responsable</span>
-        <p class="info__value">{{ centro.nombre_responsable }}</p>
+
+      <!-- Estado de acceso -->
+      <div v-if="centro.vialidad" class="info__field">
+        <span class="info__label">Estado de acceso</span>
+        <p class="info__value">{{ centro.vialidad }}</p>
       </div>
-      <div v-if="centro.cargo_responsable" class="info__field">
-        <span class="info__label">Cargo</span>
-        <p class="info__value">{{ CARGO_LABEL[centro.cargo_responsable] }}</p>
-      </div>
+
+      <!-- Teléfono del responsable -->
       <div v-if="centro.telefono_responsable" class="info__field">
         <span class="info__label">Teléfono del responsable</span>
         <a :href="`tel:${centro.telefono_responsable}`" class="info__value info__tel">{{ centro.telefono_responsable }}</a>
@@ -166,28 +178,35 @@ async function copiarReporte() {
   flex-direction: column;
   gap: var(--sp-3);
 }
+.info__row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+}
 .info__field {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 .info__label {
   font-size: var(--fs-xs);
-  font-weight: var(--fw-semibold);
   color: var(--c-text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 .info__value {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
   color: var(--c-text);
   word-break: break-word;
   overflow-wrap: break-word;
 }
+.info__cargo {
+  font-weight: var(--fw-regular);
+  color: var(--c-text-muted);
+}
 .info__tel {
-  color: var(--c-primary-600);
+  color: var(--c-text);
   text-decoration: none;
-  font-weight: var(--fw-medium);
 }
 .info__tel:hover {
   text-decoration: underline;

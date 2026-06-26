@@ -42,6 +42,7 @@ export interface Centro {
   nombre_responsable?: string | null
   cargo_responsable?: CargoResponsable | null
   telefono_responsable?: string | null
+  vialidad?: string | null
 }
 
 export interface ContactoEmergencia {
