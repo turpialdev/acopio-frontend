@@ -62,11 +62,23 @@ async function copiarReporte() {
 
     <!-- Información del centro -->
     <div class="info">
-      <!-- Fila 2 columnas: contacto | responsable -->
+      <!-- Fila 1: contacto | estado de acceso -->
       <div class="info__row2">
         <div v-if="centro.contacto" class="info__field">
           <span class="info__label">Números de contacto</span>
           <a :href="`tel:${centro.contacto}`" class="info__value info__tel">{{ centro.contacto }}</a>
+        </div>
+        <div v-if="centro.vialidad" class="info__field">
+          <span class="info__label">Estado de acceso</span>
+          <p class="info__value">{{ centro.vialidad }}</p>
+        </div>
+      </div>
+
+      <!-- Fila 2: teléfono responsable | responsable + cargo -->
+      <div class="info__row2">
+        <div v-if="centro.telefono_responsable" class="info__field">
+          <span class="info__label">Teléfono del responsable</span>
+          <a :href="`tel:${centro.telefono_responsable}`" class="info__value info__tel">{{ centro.telefono_responsable }}</a>
         </div>
         <div v-if="centro.nombre_responsable" class="info__field">
           <span class="info__label">Responsable</span>
@@ -77,22 +89,10 @@ async function copiarReporte() {
         </div>
       </div>
 
-      <!-- Dirección -->
+      <!-- Fila completa: dirección -->
       <div class="info__field">
         <span class="info__label">Dirección</span>
         <p class="info__value">{{ centro.direccion }}, {{ centro.municipio }}, {{ centro.estado }}</p>
-      </div>
-
-      <!-- Estado de acceso -->
-      <div v-if="centro.vialidad" class="info__field">
-        <span class="info__label">Estado de acceso</span>
-        <p class="info__value">{{ centro.vialidad }}</p>
-      </div>
-
-      <!-- Teléfono del responsable -->
-      <div v-if="centro.telefono_responsable" class="info__field">
-        <span class="info__label">Teléfono del responsable</span>
-        <a :href="`tel:${centro.telefono_responsable}`" class="info__value info__tel">{{ centro.telefono_responsable }}</a>
       </div>
     </div>
 
