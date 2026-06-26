@@ -45,19 +45,21 @@ defineEmits<{ 'update:modelValue': [value: string | null] }>()
   flex-shrink: 0;
 }
 .pill {
-  padding: var(--sp-1) var(--sp-3);
-  border: 1px solid var(--c-border-strong);
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--c-primary-500);
   border-radius: var(--r-full);
   background: var(--c-surface);
+  color: var(--c-primary-500);
   font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   transition:
     background-color 0.15s,
     border-color 0.15s,
     color 0.15s;
 }
-.pill:hover {
-  border-color: var(--c-primary-300);
+.pill:hover:not(.is-active) {
+  background: var(--c-primary-50);
 }
 .pill.is-active {
   background: var(--c-primary-500);
