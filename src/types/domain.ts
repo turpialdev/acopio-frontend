@@ -1,0 +1,79 @@
+/**
+ * Tipos de dominio — espejo de los enums y respuestas del backend.
+ * Ver claude_context/FRONTEND.md (sección "Estados controlados").
+ */
+
+export type Urgencia = 'urgente' | 'media' | 'leve'
+export type TipoMovimiento = 'entrada' | 'salida'
+export type CargoResponsable = 'propietario' | 'socio' | 'director' | 'gerente'
+export type EstadoVerificacion = 'sin_verificar' | 'verificado' | 'oculto'
+export type MotivoReporte = 'duplicado' | 'falso' | 'peligroso' | 'otro'
+export type Rol = 'responsable' | 'voluntario'
+
+export interface Categoria {
+  id: string
+  nombre: string
+  es_insumo: boolean
+  activa: boolean
+}
+
+export interface Necesidad {
+  id: string
+  categoria_id: string
+  categoria_nombre: string
+  urgencia: Urgencia
+  detalle?: string | null
+}
+
+export interface Centro {
+  id: string
+  nombre: string
+  estado: string
+  municipio: string
+  direccion: string
+  contacto?: string | null
+  ubicacion_url?: string | null
+  lat?: number | null
+  lng?: number | null
+  estado_verificacion: EstadoVerificacion
+  actualizado_en: string
+  urgencia_maxima?: Urgencia | null
+  necesidades: Necesidad[]
+}
+
+export interface ContactoEmergencia {
+  id: string
+  nombre: string
+  tipo: string
+  zona: string
+  telefonos: string[]
+  whatsapp_url?: string | null
+}
+
+export interface Movimiento {
+  id: string
+  centro_id: string
+  categoria_id: string
+  tipo: TipoMovimiento
+  cantidad: number
+  unidad: string
+  nota?: string | null
+  contraparte?: string | null
+  registrado_por: string
+  registrado_en: string
+}
+
+/** Respuesta de POST /api/auth/codigo/ */
+export interface SesionCodigo {
+  token: string
+  rol: Rol
+  centro_id: string
+  etiqueta?: string
+}
+
+/** Respuesta de POST /api/auth/moderador/ */
+export interface SesionModerador {
+  token: string
+  moderador_id: string
+  nombre: string
+}
