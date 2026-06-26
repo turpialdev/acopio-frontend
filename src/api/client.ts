@@ -4,7 +4,7 @@
  */
 
 export const BASE_URL: string =
-  import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+  import.meta.env.VITE_API_URL ?? 'http://acopio-prod-2137653306.us-east-2.elb.amazonaws.com'
 
 const TOKEN_KEY = 'acopio.token'
 

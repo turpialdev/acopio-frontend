@@ -63,6 +63,49 @@ export interface Movimiento {
   registrado_en: string
 }
 
+/** Ficha completa del centro (incluye datos internos del responsable). */
+export interface Ficha extends Centro {
+  vialidad?: string | null
+  nombre_responsable?: string | null
+  telefono_responsable?: string | null
+  cargo_responsable?: CargoResponsable | null
+}
+
+/** Item editable de necesidad al guardar la ficha. */
+export interface NecesidadInput {
+  categoria_id: string
+  urgencia: Urgencia
+  detalle?: string | null
+}
+
+export interface TotalCategoria {
+  categoria_id: string
+  categoria_nombre: string
+  entradas: number
+  salidas: number
+}
+
+export interface Totales {
+  nota: string
+  categorias: TotalCategoria[]
+}
+
+export interface Sugerencia {
+  categoria_id: string
+  categoria_nombre: string
+  entradas_hoy: number
+  salidas_hoy: number
+  urgencia_actual: Urgencia
+  mensaje: string
+}
+
+export interface CodigoVoluntario {
+  id: string
+  etiqueta: string
+  rol: 'voluntario'
+  revocado_en?: string | null
+}
+
 /** Respuesta de POST /api/auth/codigo/ */
 export interface SesionCodigo {
   token: string
