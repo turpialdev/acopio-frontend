@@ -1,0 +1,3 @@
+# Disable the supply-chain "minimum release age" gate. pnpm 11 reads this from
+# pnpm-workspace.yaml (the .npmrc `minimum-release-age` key is no longer honored).
+minimumReleaseAge: 0
