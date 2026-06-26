@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppSpinner from '@/components/ui/AppSpinner.vue'
+import IconPersonCircle from '@/components/icons/IconPersonCircle.vue'
 import { contactos } from '@/api'
 import type { ContactoEmergencia } from '@/types/domain'
 
@@ -36,8 +37,8 @@ async function alternar() {
         <p class="emerg__eyebrow">Información útil</p>
         <h2 class="emerg__title">Contactos de Emergencia</h2>
       </div>
-      <AppButton variant="outline" size="sm" @click="alternar">
-        {{ abierto ? 'Ocultar Contactos' : 'Ver Contactos' }}
+      <AppButton variant="ghost" size="sm" class="toggle-btn" @click="alternar">
+        {{ abierto ? 'Ocultar' : 'Ver' }}
       </AppButton>
     </header>
 
@@ -47,14 +48,14 @@ async function alternar() {
       <p v-else-if="!lista.length" class="emerg__empty">No hay contactos disponibles.</p>
       <ul v-else class="emerg__list">
         <li v-for="c in lista" :key="c.id" class="contact">
-          <span class="contact__icon" aria-hidden="true">☎</span>
+          <span class="contact__icon" aria-hidden="true"><IconPersonCircle /></span>
           <div class="contact__info">
             <p class="contact__name">{{ c.nombre }}</p>
             <p class="contact__type">{{ c.tipo }}</p>
           </div>
           <div class="contact__actions">
             <a v-if="c.telefonos[0]" :href="`tel:${c.telefonos[0]}`">
-              <AppButton variant="outline" size="sm">Llamar</AppButton>
+              <AppButton variant="outline" size="sm" class="llamar-btn">Llamar</AppButton>
             </a>
             <a v-if="c.whatsapp_url" :href="c.whatsapp_url" target="_blank" rel="noopener">
               <AppButton variant="ghost" size="sm">WhatsApp</AppButton>
@@ -67,6 +68,22 @@ async function alternar() {
 </template>
 
 <style scoped>
+:deep(.toggle-btn) {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+}
+:deep(.toggle-btn):hover {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  border-color: #2563eb;
+}
+:deep(.llamar-btn) {
+  color: #2563eb;
+  border-color: #2563eb;
+}
+:deep(.llamar-btn):hover {
+  background: rgba(37, 99, 235, 0.06);
+}
 .emerg {
   padding: var(--sp-4) var(--sp-5);
   background: var(--c-surface);

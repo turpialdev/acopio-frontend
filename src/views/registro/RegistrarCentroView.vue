@@ -62,13 +62,38 @@ function campoError(campo: string): string {
   return errores.value[campo] ?? ''
 }
 
+function validarTelefono(tel: string): boolean {
+  return tel.replace(/\D/g, '').length >= 7
+}
+
 async function crear() {
-  // Validación de campos que no son del centro (no los valida el backend).
   errores.value = {}
   errorGeneral.value = ''
-  if (!form.categoria_principal) errores.value.categoria_principal = 'Selecciona una categoría.'
-  if (!form.cargo_responsable) errores.value.cargo_responsable = 'Selecciona un cargo.'
+
+  if (!form.nombre.trim()) errores.value.nombre = 'El nombre del centro es requerido.'
+  else if (form.nombre.length > 200) errores.value.nombre = 'No puede superar los 200 caracteres.'
+
+  if (!form.estado) errores.value.estado = 'Selecciona un estado.'
   if (!form.municipio) errores.value.municipio = 'Selecciona un municipio.'
+  if (!form.categoria_principal) errores.value.categoria_principal = 'Selecciona una categoría.'
+
+  if (!form.direccion.trim()) errores.value.direccion = 'La dirección es requerida.'
+  else if (form.direccion.length > 500) errores.value.direccion = 'No puede superar los 500 caracteres.'
+
+  if (!form.nombre_responsable.trim())
+    errores.value.nombre_responsable = 'El nombre del responsable es requerido.'
+  else if (form.nombre_responsable.length > 200)
+    errores.value.nombre_responsable = 'No puede superar los 200 caracteres.'
+
+  if (!form.telefono_responsable.trim())
+    errores.value.telefono_responsable = 'El teléfono de contacto es requerido.'
+  else if (!validarTelefono(form.telefono_responsable))
+    errores.value.telefono_responsable = 'Ingresa un número de teléfono válido (mínimo 7 dígitos).'
+  else if (form.telefono_responsable.length > 50)
+    errores.value.telefono_responsable = 'No puede superar los 50 caracteres.'
+
+  if (!form.cargo_responsable) errores.value.cargo_responsable = 'Selecciona un cargo.'
+
   if (Object.keys(errores.value).length) return
 
   enviando.value = true
@@ -156,6 +181,7 @@ onMounted(async () => {
             v-model="form.nombre"
             label="Nombre del centro"
             required
+            :maxlength="200"
             placeholder="Ej: Centro Comunitario La Vega"
             :error="campoError('nombre')"
           />
@@ -188,6 +214,7 @@ onMounted(async () => {
             v-model="form.direccion"
             label="Dirección"
             required
+            :maxlength="500"
             placeholder="Calle, sector, referencia"
             hint="Referencia que permita ubicar el centro físicamente"
             :error="campoError('direccion')"
@@ -200,6 +227,7 @@ onMounted(async () => {
             v-model="form.nombre_responsable"
             label="Nombre completo"
             required
+            :maxlength="200"
             placeholder="Nombre y apellido"
             :error="campoError('nombre_responsable')"
           />
@@ -207,6 +235,7 @@ onMounted(async () => {
             v-model="form.telefono_responsable"
             label="Teléfono de contacto"
             required
+            :maxlength="50"
             placeholder="+58 212 000-0000"
             :error="campoError('telefono_responsable')"
           />

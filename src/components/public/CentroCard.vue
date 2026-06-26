@@ -105,6 +105,9 @@ async function compartir() {
 }
 .card__title {
   font-size: var(--fs-xl);
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .verif {
@@ -135,6 +138,10 @@ async function compartir() {
   border: 1px solid var(--c-border);
   border-radius: var(--r-md);
 }
+.row__text {
+  flex: 1;
+  min-width: 0;
+}
 .row__label {
   font-weight: var(--fw-bold);
   font-size: var(--fs-sm);
@@ -142,6 +149,8 @@ async function compartir() {
 .row__value {
   font-size: var(--fs-sm);
   color: var(--c-text-muted);
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .needs {

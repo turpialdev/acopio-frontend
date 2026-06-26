@@ -187,6 +187,10 @@ onMounted(async () => {
   font-weight: var(--fw-bold);
   color: var(--c-primary-700);
   letter-spacing: 0.05em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .error {
   color: var(--c-danger);

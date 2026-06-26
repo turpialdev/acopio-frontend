@@ -239,6 +239,11 @@ onMounted(async () => {
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-3);
 }
+@media (max-width: 480px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
 .card__error {
   font-size: var(--fs-sm);
   color: var(--c-danger);

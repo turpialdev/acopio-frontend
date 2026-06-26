@@ -73,9 +73,33 @@ function quitarNecesidad(i: number) {
   necesidades.value.splice(i, 1)
 }
 
+function validarTelefono(tel: string): boolean {
+  return tel.replace(/\D/g, '').length >= 7
+}
+
 async function guardar() {
   const id = sesion.centroId
   if (!id) return
+
+  const errs: Record<string, string> = {}
+  if (!form.nombre.trim()) errs.nombre = 'El nombre del centro es requerido.'
+  else if (form.nombre.length > 200) errs.nombre = 'No puede superar los 200 caracteres.'
+  if (!form.estado) errs.estado = 'Selecciona un estado.'
+  if (!form.municipio) errs.municipio = 'Selecciona un municipio.'
+  if (!form.direccion.trim()) errs.direccion = 'La dirección es requerida.'
+  else if (form.direccion.length > 500) errs.direccion = 'No puede superar los 500 caracteres.'
+  if (form.nombre_responsable && form.nombre_responsable.length > 200)
+    errs.nombre_responsable = 'No puede superar los 200 caracteres.'
+  if (form.telefono_responsable && !validarTelefono(form.telefono_responsable))
+    errs.telefono_responsable = 'Ingresa un número de teléfono válido (mínimo 7 dígitos).'
+  if (form.telefono_responsable && form.telefono_responsable.length > 50)
+    errs.telefono_responsable = 'No puede superar los 50 caracteres.'
+
+  if (Object.keys(errs).length) {
+    error.value = Object.values(errs)[0] ?? 'Corrige los errores del formulario.'
+    return
+  }
+
   guardando.value = true
   error.value = ''
   exito.value = false
@@ -159,7 +183,7 @@ onMounted(async () => {
       <form v-else class="form" @submit.prevent="guardar">
         <fieldset class="section">
           <legend class="section__title">Datos del centro</legend>
-          <TextField v-model="form.nombre" label="Nombre del centro" required />
+          <TextField v-model="form.nombre" label="Nombre del centro" required :maxlength="200" />
           <SelectField
             v-model="form.estado"
             label="Estado"
@@ -175,24 +199,26 @@ onMounted(async () => {
             placeholder="Selecciona un Municipio"
             :options="opcionesMunicipio"
           />
-          <TextField v-model="form.direccion" label="Dirección" required />
-          <TextField v-model="form.contacto" label="Contacto (teléfono)" placeholder="0414 1234567" />
+          <TextField v-model="form.direccion" label="Dirección" required :maxlength="500" />
+          <TextField v-model="form.contacto" label="Contacto (teléfono)" placeholder="0414 1234567" :maxlength="50" />
           <TextField
             v-model="form.ubicacion_url"
             label="Enlace de ubicación (Maps)"
             placeholder="https://maps.google.com/…"
+            :maxlength="500"
           />
           <TextField
             v-model="form.vialidad"
             label="Vialidad / cómo llegar"
             placeholder="Acceso por la autopista…"
+            :maxlength="500"
           />
         </fieldset>
 
         <fieldset class="section">
           <legend class="section__title">Datos del responsable</legend>
-          <TextField v-model="form.nombre_responsable" label="Nombre completo" />
-          <TextField v-model="form.telefono_responsable" label="Teléfono de contacto" />
+          <TextField v-model="form.nombre_responsable" label="Nombre completo" :maxlength="200" />
+          <TextField v-model="form.telefono_responsable" label="Teléfono de contacto" :maxlength="50" />
           <SelectField
             v-model="form.cargo_responsable"
             label="Cargo"
@@ -282,6 +308,11 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: var(--sp-3);
+}
+@media (max-width: 480px) {
+  .need__grid {
+    grid-template-columns: 1fr;
+  }
 }
 .need__remove {
   align-self: flex-end;

@@ -20,12 +20,8 @@ withDefaults(
 </script>
 
 <template>
-  <button
-    :type="type"
-    :disabled="disabled || loading"
-    class="btn"
-    :class="[`btn--${variant}`, `btn--${size}`, { 'btn--block': block, 'is-loading': loading }]"
-  >
+  <button :type="type" :disabled="disabled || loading" class="btn"
+    :class="[`btn--${variant}`, `btn--${size}`, { 'btn--block': block, 'is-loading': loading }]">
     <span v-if="loading" class="btn__spinner" aria-hidden="true" />
     <slot />
   </button>
@@ -47,13 +43,16 @@ withDefaults(
     transform 0.05s;
   white-space: nowrap;
 }
+
 .btn:active:not(:disabled) {
   transform: translateY(1px);
 }
+
 .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
 .btn--block {
   width: 100%;
 }
@@ -62,10 +61,12 @@ withDefaults(
   padding: var(--sp-1) var(--sp-3);
   font-size: var(--fs-sm);
 }
+
 .btn--md {
   padding: var(--sp-2) var(--sp-4);
   font-size: var(--fs-sm);
 }
+
 .btn--lg {
   padding: var(--sp-3) var(--sp-5);
   font-size: var(--fs-base);
@@ -75,6 +76,7 @@ withDefaults(
   background: var(--c-primary-500);
   color: var(--c-text-invert);
 }
+
 .btn--primary:hover:not(:disabled) {
   background: var(--c-primary-600);
 }
@@ -84,6 +86,7 @@ withDefaults(
   border-color: var(--c-border-strong);
   color: var(--c-text);
 }
+
 .btn--secondary:hover:not(:disabled) {
   background: var(--c-surface-2);
 }
@@ -92,9 +95,10 @@ withDefaults(
   background: transparent;
   color: var(--c-text-muted);
 }
+
 .btn--ghost:hover:not(:disabled) {
-  background: var(--c-surface-2);
-  color: var(--c-text);
+  /* background: var(--c-surface-2); */
+  /* color: var(--c-text); */
 }
 
 .btn--danger {
@@ -107,6 +111,7 @@ withDefaults(
   background: var(--c-surface);
   color: var(--c-primary-600);
 }
+
 .btn--light:hover:not(:disabled) {
   background: var(--c-primary-50);
 }
@@ -117,6 +122,7 @@ withDefaults(
   border-color: var(--c-primary-500);
   color: var(--c-primary-600);
 }
+
 .btn--outline:hover:not(:disabled) {
   background: var(--c-primary-50);
 }
@@ -129,6 +135,7 @@ withDefaults(
   border-radius: 50%;
   animation: btn-spin 0.6s linear infinite;
 }
+
 @keyframes btn-spin {
   to {
     transform: rotate(360deg);
