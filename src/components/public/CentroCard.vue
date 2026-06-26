@@ -240,7 +240,7 @@ async function copiarReporte() {
   padding: var(--sp-1) var(--sp-3);
   background: var(--chip-soft, var(--c-surface));
   border: 1px solid var(--chip, var(--c-danger));
-  border-radius: var(--r-full);
+  border-radius: var(--r-lg);
   min-width: 0;
 }
 .chip__cat {
