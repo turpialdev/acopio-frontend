@@ -62,8 +62,8 @@ defineEmits<{ 'update:modelValue': [value: string | null] }>()
   background: var(--c-primary-50);
 }
 .pill.is-active {
-  background: var(--c-primary-500);
-  border-color: var(--c-primary-500);
+  background: #2563eb;
+  border-color: #2563eb;
   color: var(--c-text-invert);
   font-weight: var(--fw-semibold);
 }
