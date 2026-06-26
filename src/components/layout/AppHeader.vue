@@ -11,7 +11,7 @@ const { estaAutenticado, esModerador, esResponsable, esVoluntario, sesion, cerra
 /** Destino del panel según el tipo de sesión. */
 function centroDestino() {
   if (esResponsable.value) return { name: 'panel-centro' }
-  if (esVoluntario.value) return { name: 'inventario' }
+  if (esVoluntario.value) return { name: 'panel-centro' }
   if (esModerador.value) return { name: 'moderacion' }
   return { name: 'home' }
 }

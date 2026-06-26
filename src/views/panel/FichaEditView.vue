@@ -33,6 +33,7 @@ const form = reactive({
   municipio: '',
   direccion: '',
   contacto: '',
+  horario: '',
   ubicacion_url: '',
   vialidad: '',
   nombre_responsable: '',
@@ -117,6 +118,7 @@ async function guardar() {
       municipio: form.municipio,
       direccion: form.direccion,
       contacto: form.contacto.trim() || null,
+      horario: form.horario.trim() || null,
       ubicacion_url: form.ubicacion_url.trim() || null,
       vialidad: form.vialidad.trim() || null,
       nombre_responsable: form.nombre_responsable.trim() || null,
@@ -151,6 +153,7 @@ onMounted(async () => {
     form.municipio = ficha.municipio
     form.direccion = ficha.direccion
     form.contacto = ficha.contacto ?? ''
+    form.horario = ficha.horario ?? ''
     form.ubicacion_url = ficha.ubicacion_url ?? ''
     form.vialidad = ficha.vialidad ?? ''
     form.nombre_responsable = ficha.nombre_responsable ?? ''
@@ -200,17 +203,23 @@ onMounted(async () => {
             :options="opcionesMunicipio"
           />
           <TextField v-model="form.direccion" label="Dirección" required :maxlength="500" />
-          <TextField v-model="form.contacto" label="Contacto (teléfono)" placeholder="0414 1234567" :maxlength="50" />
+          <TextField v-model="form.contacto" label="Teléfono (opcional)" placeholder="0414 1234567" :maxlength="100" />
+          <TextField
+            v-model="form.horario"
+            label="Horario de trabajo (opcional)"
+            placeholder="Ej: Lunes a viernes 8am – 5pm"
+            :maxlength="300"
+          />
+          <TextField
+            v-model="form.vialidad"
+            label="Vialidad (opcional)"
+            placeholder="Acceso por la autopista…"
+            :maxlength="300"
+          />
           <TextField
             v-model="form.ubicacion_url"
             label="Enlace de ubicación (Maps)"
             placeholder="https://maps.google.com/…"
-            :maxlength="500"
-          />
-          <TextField
-            v-model="form.vialidad"
-            label="Vialidad / cómo llegar"
-            placeholder="Acceso por la autopista…"
             :maxlength="500"
           />
         </fieldset>

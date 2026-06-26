@@ -29,9 +29,13 @@ export interface NuevoCentro {
   estado: string
   municipio: string
   direccion: string
+  contacto?: string
+  horario?: string
+  vialidad?: string
   nombre_responsable: string
   telefono_responsable: string
   cargo_responsable: CargoResponsable
+  necesidades?: NecesidadInput[]
 }
 
 /** El POST devuelve `codigo_raiz` UNA SOLA VEZ. */
@@ -66,6 +70,7 @@ export type FichaPatch = Partial<{
   municipio: string
   direccion: string
   contacto: string | null
+  horario: string | null
   ubicacion_url: string | null
   vialidad: string | null
   nombre_responsable: string | null

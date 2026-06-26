@@ -7,10 +7,10 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 import PageHero from '@/components/layout/PageHero.vue'
 import IconPersonAdd from '@/components/icons/IconPersonAdd.vue'
 import MovimientoRow from '@/components/inventario/MovimientoRow.vue'
-import { catalogo, movimientos as movApi, ApiError } from '@/api'
+import { catalogo, centros as centrosApi, movimientos as movApi, ApiError } from '@/api'
 import { useAuth } from '@/composables/useAuth'
 import { esHoy, fechaDia, minutosDesde } from '@/lib/format'
-import type { Movimiento } from '@/types/domain'
+import type { Movimiento, Totales } from '@/types/domain'
 
 const router = useRouter()
 const { esVoluntario, esResponsable, sesion } = useAuth()
@@ -20,6 +20,7 @@ const VENTANA_MIN = 60
 
 const todos = ref<Movimiento[]>([])
 const catMap = ref<Record<string, string>>({})
+const totales = ref<Totales | null>(null)
 const cargando = ref(true)
 const error = ref('')
 const busqueda = ref('')
@@ -75,12 +76,14 @@ onMounted(async () => {
   }
   try {
     // Catálogo completo para mapear categoria_id → nombre.
-    const [cats, movs] = await Promise.all([
+    const [cats, movs, tots] = await Promise.all([
       catalogo.listarCategorias(),
       movApi.listarMovimientos(sesion.centroId),
+      centrosApi.obtenerTotales(sesion.centroId).catch(() => null),
     ])
     catMap.value = Object.fromEntries(cats.map((c) => [c.id, c.nombre]))
     todos.value = movs
+    totales.value = tots
   } catch (e) {
     error.value = e instanceof ApiError ? e.firstMessage : 'No se pudieron cargar los movimientos.'
   } finally {
@@ -162,6 +165,29 @@ onMounted(async () => {
           </section>
         </template>
       </template>
+
+      <!-- Totales registrados (no existencias — ADR 0007) -->
+      <section v-if="!cargando && totales && totales.categorias.length" class="totales">
+        <h2 class="totales__title">Totales registrados</h2>
+        <div class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Insumo</th>
+                <th class="num">Entradas</th>
+                <th class="num">Salidas</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="c in totales.categorias" :key="c.categoria_id">
+                <td>{{ c.categoria_nombre }}</td>
+                <td class="num">{{ c.entradas }}</td>
+                <td class="num">{{ c.salidas }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -201,6 +227,42 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
+}
+
+.totales__title {
+  font-size: var(--fs-lg);
+  margin-bottom: var(--sp-3);
+}
+.tabla-wrap {
+  overflow-x: auto;
+}
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  font-size: var(--fs-sm);
+}
+.tabla th,
+.tabla td {
+  padding: var(--sp-3) var(--sp-4);
+  text-align: left;
+  border-bottom: 1px solid var(--c-border);
+}
+.tabla thead th {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-faint);
+}
+.tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 .group {
   display: flex;
