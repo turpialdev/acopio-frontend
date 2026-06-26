@@ -157,7 +157,7 @@ onMounted(async () => {
             <IconSearch />
             Buscar
           </AppButton>
-          <AppButton variant="secondary" block @click="limpiar">
+          <AppButton variant="secondary" block class="limpiar-btn" @click="limpiar">
             <IconBroom class="limpiar-icon" />
             Limpiar
           </AppButton>
@@ -291,8 +291,14 @@ onMounted(async () => {
   color: #a6a6a6;
   pointer-events: none;
 }
-:deep(.limpiar-icon) {
+:deep(.limpiar-btn) {
+  background: #e6f2fe;
+  border-color: transparent;
   color: #2563eb;
+}
+:deep(.limpiar-btn:hover:not(:disabled)) {
+  background: #e6f2fe;
+  border-color: #2563eb;
 }
 .panel__actions :deep(.btn) {
   border-radius: var(--r-lg);
