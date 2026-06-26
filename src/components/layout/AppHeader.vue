@@ -85,9 +85,19 @@ function salir() {
   font-weight: var(--fw-semibold);
 }
 
+@media (max-width: 600px) {
+  .brand__name {
+    font-size: var(--fs-base);
+  }
+}
 @media (max-width: 420px) {
   .brand__name {
-    font-size: var(--fs-lg);
+    font-size: var(--fs-sm);
+  }
+}
+@media (max-width: 340px) {
+  .brand__name {
+    font-size: var(--fs-xs);
   }
 }
 </style>
