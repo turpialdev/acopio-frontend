@@ -10,15 +10,15 @@
 
       <ul class="footer__tips">
         <li>
-          📲 Comparte centros por SMS/WhatsApp con el botón de copiar en cada tarjeta.
+          Comparte centros por SMS/WhatsApp con el botón de copiar en cada tarjeta.
         </li>
         <li>
-          ⚠ La información mostrada es suministrada por usuarios de la aplicación. Verifica los
+          La información mostrada es suministrada por usuarios de la aplicación. Verifica los
           datos directamente con cada centro antes de movilizar donaciones o tomar decisiones
           críticas.
         </li>
         <li>
-          📦 Las donaciones serán entregadas por los clubes de pádel a la alcaldía correspondiente
+          Las donaciones serán entregadas por los clubes de pádel a la alcaldía correspondiente
           a su municipio o a los entes pertinentes.
         </li>
       </ul>
