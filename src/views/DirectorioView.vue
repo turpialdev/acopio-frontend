@@ -144,8 +144,8 @@ onMounted(async () => {
         </label>
 
         <div class="panel__actions">
-          <AppButton variant="light" block @click="buscar">Buscar</AppButton>
-          <AppButton variant="light" block @click="limpiar">Limpiar</AppButton>
+          <AppButton variant="primary" block @click="buscar">Buscar</AppButton>
+          <AppButton variant="secondary" block @click="limpiar">Limpiar</AppButton>
         </div>
       </section>
 
@@ -209,22 +209,24 @@ onMounted(async () => {
   padding: var(--sp-4) var(--sp-3);
   min-height: 80px;
   font-size: var(--fs-sm);
+  border-radius: var(--r-lg);
 }
 
-/* Panel azul de búsqueda */
+/* Panel de búsqueda — card blanco */
 .panel {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
   padding: var(--sp-5);
   border-radius: var(--r-xl);
-  background: linear-gradient(160deg, var(--c-primary-600), var(--c-primary-800));
-  color: var(--c-text-invert);
-  box-shadow: var(--shadow-md);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-sm);
 }
 .panel__title {
   font-size: var(--fs-lg);
-  color: var(--c-text-invert);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
 }
 .panel__search {
   position: relative;
@@ -240,10 +242,15 @@ onMounted(async () => {
 .panel__input {
   width: 100%;
   padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-8);
-  border: none;
+  border: 1px solid var(--c-border);
   border-radius: var(--r-md);
   background: var(--c-surface);
   color: var(--c-text);
+}
+.panel__input:focus {
+  outline: 2px solid var(--c-primary-500);
+  outline-offset: -1px;
+  border-color: transparent;
 }
 .panel__field {
   display: flex;
@@ -253,20 +260,23 @@ onMounted(async () => {
 .panel__label {
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
+  color: var(--c-text);
 }
 .req {
-  color: #ffd1d1;
+  color: var(--c-danger);
 }
 .panel__control {
   width: 100%;
   padding: var(--sp-3);
-  border: none;
+  border: 1px solid var(--c-border);
   border-radius: var(--r-md);
   background: var(--c-surface);
   color: var(--c-text);
 }
 .panel__control:focus {
-  outline: 2px solid var(--c-primary-300);
+  outline: 2px solid var(--c-primary-500);
+  outline-offset: -1px;
+  border-color: transparent;
 }
 .panel__control:disabled {
   opacity: 0.6;
