@@ -38,7 +38,7 @@ const routes: RouteRecordRaw[] = [
     path: '/panel',
     name: 'panel-centro',
     component: () => import('@/views/panel/PanelCentroView.vue'),
-    meta: { requiere: 'responsable' },
+    meta: { requiere: 'codigo' },
   },
   {
     path: '/panel/ficha',

@@ -10,7 +10,7 @@ import { useAuth } from '@/composables/useAuth'
 import type { Ficha, Sugerencia } from '@/types/domain'
 
 const router = useRouter()
-const { sesion } = useAuth()
+const { sesion, esResponsable } = useAuth()
 
 const ficha = ref<Ficha | null>(null)
 const sugerencias = ref<Sugerencia[]>([])
@@ -21,12 +21,21 @@ const subtitulo = computed(() =>
   ficha.value ? `${ficha.value.municipio}, ${ficha.value.estado}` : '',
 )
 
-const ACCIONES = [
+const ACCIONES_RESPONSABLE = [
   { label: 'Editar ficha', desc: 'Datos públicos y necesidades', to: 'panel-ficha' },
   { label: 'Inventario', desc: 'Registrar entradas y salidas', to: 'inventario' },
   { label: 'Ver movimientos', desc: 'Historial del centro', to: 'movimientos' },
   { label: 'Códigos de voluntario', desc: 'Crear y revocar accesos', to: 'panel-codigos' },
-] as const
+]
+
+const ACCIONES_VOLUNTARIO = [
+  { label: 'Inventario', desc: 'Registrar entradas y salidas', to: 'inventario' },
+  { label: 'Ver movimientos', desc: 'Historial del centro', to: 'movimientos' },
+]
+
+const acciones = computed(() =>
+  esResponsable.value ? ACCIONES_RESPONSABLE : ACCIONES_VOLUNTARIO,
+)
 
 onMounted(async () => {
   const id = sesion.centroId
@@ -64,8 +73,8 @@ onMounted(async () => {
       <template v-else>
         <p v-if="error" class="error">{{ error }}</p>
 
-        <!-- Sugerencias del inventario (ADR 0005) -->
-        <section v-if="sugerencias.length" class="sugerencias">
+        <!-- Sugerencias del inventario (ADR 0005) — solo para el responsable -->
+        <section v-if="esResponsable && sugerencias.length" class="sugerencias">
           <h2 class="section-title">Sugerencias del inventario</h2>
           <div v-for="s in sugerencias" :key="s.categoria_id" class="sug">
             <p class="sug__cat">{{ s.categoria_nombre }}</p>
@@ -78,7 +87,7 @@ onMounted(async () => {
 
         <!-- Acciones -->
         <section class="acciones">
-          <button v-for="a in ACCIONES" :key="a.to" class="accion" @click="router.push({ name: a.to })">
+          <button v-for="a in acciones" :key="a.to" class="accion" @click="router.push({ name: a.to })">
             <span class="accion__label">{{ a.label }}</span>
             <span class="accion__desc">{{ a.desc }}</span>
           </button>
