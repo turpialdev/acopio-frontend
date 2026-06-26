@@ -96,7 +96,7 @@ async function copiarReporte() {
     </section>
 
     <!-- Copiar reporte -->
-    <AppButton block variant="primary" @click="copiarReporte">
+    <AppButton block variant="primary" class="reporte-btn" @click="copiarReporte">
       <IconShare />
       {{ copiado ? '¡Copiado!' : 'Copiar reporte para WhatsApp/SMS' }}
     </AppButton>
@@ -172,6 +172,16 @@ async function copiarReporte() {
 }
 .info__tel:hover {
   text-decoration: underline;
+}
+
+/* Botón Copiar reporte */
+:deep(.reporte-btn) {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+:deep(.reporte-btn:hover:not(:disabled)) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
 /* Botón Cómo llegar */
