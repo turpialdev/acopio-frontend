@@ -283,6 +283,12 @@ onMounted(async () => {
   grid-template-columns: 2fr 1fr;
   gap: var(--sp-3);
 }
+@media (max-width: 480px) {
+  .need__grid {
+    grid-template-columns: 1fr;
+  }
+}
+}
 .need__remove {
   align-self: flex-end;
   border: none;
