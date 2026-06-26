@@ -8,6 +8,8 @@ defineProps<{
   hint?: string
   autocomplete?: string
   required?: boolean
+  maxlength?: number
+  disabled?: boolean
 }>()
 defineEmits<{ 'update:modelValue': [value: string] }>()
 </script>
@@ -25,6 +27,8 @@ defineEmits<{ 'update:modelValue': [value: string] }>()
       :value="modelValue"
       :placeholder="placeholder"
       :autocomplete="autocomplete"
+      :maxlength="maxlength"
+      :disabled="disabled"
       :aria-invalid="!!error"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />
