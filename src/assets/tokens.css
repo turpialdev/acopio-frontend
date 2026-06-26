@@ -87,5 +87,5 @@
   --container: 1120px;
   /* El diseño es mobile-first; el contenido vive en una columna estrecha. */
   --content: 460px;
-  --header-h: 60px;
+  --header-h: 66px;
 }

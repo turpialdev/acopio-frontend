@@ -82,7 +82,7 @@ function salir() {
   font-weight: var(--fw-bold);
 }
 .brand__name {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--fs-xl);
   font-weight: var(--fw-bold);
 }
