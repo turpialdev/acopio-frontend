@@ -35,6 +35,10 @@ jobs:
 
       - name: Build
         run: pnpm run build
+        env:
+          # Public build-time config (baked into the bundle, not a secret).
+          # Same-origin with the SPA, so API calls go to /api/* with no CORS.
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
