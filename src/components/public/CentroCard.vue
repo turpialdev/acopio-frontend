@@ -72,10 +72,10 @@ async function copiarReporte() {
     </AppButton>
 
     <!-- Insumos requeridos -->
-    <section v-if="centro.necesidades.length" class="needs">
-      <p class="needs__head">⚠ Insumos requeridos</p>
+    <section class="needs" :class="centro.necesidades.length ? 'needs--con-items' : 'needs--vacio'">
+      <p class="needs__head">Insumos requeridos</p>
       <p class="needs__updated">Actualizado: {{ fechaHora(centro.actualizado_en) }}</p>
-      <ul class="needs__list">
+      <ul v-if="centro.necesidades.length" class="needs__list">
         <li
           v-for="n in centro.necesidades"
           :key="n.id"
@@ -89,6 +89,10 @@ async function copiarReporte() {
           <span v-if="n.detalle" class="chip__detail">{{ n.detalle }}</span>
         </li>
       </ul>
+      <p v-else class="needs__empty">
+        Aún no se reportaron insumos específicos. Cualquier donación o apoyo será bien recibido por
+        este centro.
+      </p>
     </section>
 
     <!-- Copiar reporte -->
@@ -185,20 +189,42 @@ async function copiarReporte() {
 /* Insumos requeridos */
 .needs {
   padding: var(--sp-4);
+  border-radius: var(--r-md);
+}
+.needs--con-items {
   background: var(--c-danger-soft);
   border: 1px solid var(--c-danger);
-  border-radius: var(--r-md);
+}
+.needs--con-items .needs__head,
+.needs--con-items .needs__updated {
+  color: var(--c-danger);
+}
+.needs--vacio {
+  background: var(--c-success-soft);
+  border: 1px solid var(--c-success);
+}
+.needs--vacio .needs__head,
+.needs--vacio .needs__updated {
+  color: var(--c-success);
 }
 .needs__head {
   font-weight: var(--fw-bold);
-  font-size: var(--fs-sm);
-  color: var(--c-danger);
+  font-size: var(--fs-base);
 }
 .needs__updated {
   margin-top: var(--sp-1);
   font-size: var(--fs-xs);
-  color: var(--c-danger);
-  opacity: 0.8;
+  opacity: 0.85;
+}
+.needs__empty {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px dashed var(--c-success);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  color: var(--c-success);
+  text-align: center;
+  line-height: 1.5;
 }
 .needs__list {
   display: flex;
