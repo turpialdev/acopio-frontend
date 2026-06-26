@@ -129,7 +129,7 @@ onMounted(async () => {
         </div>
 
         <label class="panel__field">
-          <span class="panel__label">Estado <span class="req">*</span></span>
+          <span class="panel__label">Estado</span>
           <div class="panel__select-wrap">
             <IconMapPin class="panel__select-icon" aria-hidden="true" />
             <select v-model="estadoSel" class="panel__control">
@@ -140,7 +140,7 @@ onMounted(async () => {
         </label>
 
         <label class="panel__field">
-          <span class="panel__label">Municipio <span class="req">*</span></span>
+          <span class="panel__label">Municipio</span>
           <div class="panel__select-wrap">
             <IconMapPin class="panel__select-icon" aria-hidden="true" />
             <select v-model="municipioSel" class="panel__control" :disabled="!estadoSel">
