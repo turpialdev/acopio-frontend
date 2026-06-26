@@ -47,7 +47,7 @@ defineEmits<{ 'update:modelValue': [value: string | null] }>()
 .pill {
   padding: var(--sp-2) var(--sp-4);
   border: 1px solid var(--c-primary-500);
-  border-radius: var(--r-full);
+  border-radius: var(--r-md);
   background: var(--c-surface);
   color: var(--c-primary-500);
   font-size: var(--fs-sm);
