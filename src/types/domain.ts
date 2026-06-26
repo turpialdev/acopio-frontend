@@ -39,6 +39,9 @@ export interface Centro {
   actualizado_en: string
   urgencia_maxima?: Urgencia | null
   necesidades: Necesidad[]
+  nombre_responsable?: string | null
+  cargo_responsable?: CargoResponsable | null
+  telefono_responsable?: string | null
 }
 
 export interface ContactoEmergencia {

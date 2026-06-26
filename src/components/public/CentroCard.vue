@@ -4,7 +4,14 @@ import AppButton from '@/components/ui/AppButton.vue'
 import IconComoLlegar from '@/components/icons/IconComoLlegar.vue'
 import IconShare from '@/components/icons/IconShare.vue'
 import { URGENCIA_META, VERIFICACION_META, fechaHora } from '@/lib/format'
-import type { Centro } from '@/types/domain'
+import type { CargoResponsable, Centro } from '@/types/domain'
+
+const CARGO_LABEL: Record<CargoResponsable, string> = {
+  propietario: 'Propietario',
+  socio: 'Socio',
+  director: 'Director',
+  gerente: 'Gerente',
+}
 
 const props = defineProps<{ centro: Centro }>()
 
@@ -62,6 +69,18 @@ async function copiarReporte() {
       <div class="info__field">
         <span class="info__label">Dirección</span>
         <p class="info__value">{{ centro.direccion }}, {{ centro.municipio }}, {{ centro.estado }}</p>
+      </div>
+      <div v-if="centro.nombre_responsable" class="info__field">
+        <span class="info__label">Responsable</span>
+        <p class="info__value">{{ centro.nombre_responsable }}</p>
+      </div>
+      <div v-if="centro.cargo_responsable" class="info__field">
+        <span class="info__label">Cargo</span>
+        <p class="info__value">{{ CARGO_LABEL[centro.cargo_responsable] }}</p>
+      </div>
+      <div v-if="centro.telefono_responsable" class="info__field">
+        <span class="info__label">Teléfono del responsable</span>
+        <a :href="`tel:${centro.telefono_responsable}`" class="info__value info__tel">{{ centro.telefono_responsable }}</a>
       </div>
     </div>
 
