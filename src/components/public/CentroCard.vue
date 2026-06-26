@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
-import IconMapPin from '@/components/icons/IconMapPin.vue'
+import IconComoLlegar from '@/components/icons/IconComoLlegar.vue'
 import IconShare from '@/components/icons/IconShare.vue'
 import { URGENCIA_META, VERIFICACION_META, fechaHora } from '@/lib/format'
 import type { Centro } from '@/types/domain'
@@ -67,7 +67,7 @@ async function copiarReporte() {
 
     <!-- Cómo llegar -->
     <AppButton v-if="centro.ubicacion_url" variant="outline" block @click="comoLlegar">
-      <IconMapPin />
+      <IconComoLlegar />
       Cómo llegar
     </AppButton>
 
