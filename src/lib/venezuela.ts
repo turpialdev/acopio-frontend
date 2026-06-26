@@ -10,6 +10,10 @@ export interface EstadoVE {
 
 export const VENEZUELA: EstadoVE[] = [
   {
+    estado: 'Distrito Capital',
+    municipios: ['Libertador'],
+  },
+  {
     estado: 'Amazonas',
     municipios: ['Alto Orinoco', 'Atabapo', 'Atures', 'Autana', 'Manapiare', 'Maroa', 'Río Negro'],
   },
@@ -442,10 +446,6 @@ export const VENEZUELA: EstadoVE[] = [
       'Sucre',
       'Valmore Rodríguez',
     ],
-  },
-  {
-    estado: 'Distrito Capital',
-    municipios: ['Libertador'],
   },
 ]
 
