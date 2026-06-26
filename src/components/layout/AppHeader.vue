@@ -27,8 +27,7 @@ function salir() {
     <div class="header__inner">
       <RouterLink :to="{ name: 'home' }" class="brand">
         <img :src="lepLogo" alt="LEP — Liga Empresarial en Pro" class="brand__logo" />
-        <span class="brand__check" aria-hidden="true">✓</span>
-        <span class="brand__name">Acopio Venezuela</span>
+    <span class="brand__name">Acopio Venezuela</span>
       </RouterLink>
 
       <div v-if="estaAutenticado" class="header__session">
@@ -43,7 +42,7 @@ function salir() {
 
 <style scoped>
 .header {
-  background: var(--c-primary-800);
+  background: var(--c-primary-500);
   color: var(--c-text-invert);
 }
 .header__inner {
@@ -69,17 +68,6 @@ function salir() {
   height: 38px;
   width: auto;
   object-fit: contain;
-}
-.brand__check {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--c-success);
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: var(--fw-bold);
 }
 .brand__name {
   font-family: var(--font-sans);

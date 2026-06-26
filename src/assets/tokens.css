@@ -1,19 +1,19 @@
 /* ==========================================================================
    Design tokens — Acopio Venezuela
-   Derivados del diseño Figma "Centros de Acopio": azul royal/navy + serif.
+   Derivados del diseño Figma "Centros de Acopio": azul #1851C4 + sans-serif.
    Componentes consumen estas variables, nunca valores hard-coded.
    ========================================================================== */
 
 :root {
-  /* --- Brand / azul royal ----------------------------------------------- */
-  --c-primary-50: #eef0fe;
-  --c-primary-100: #dfe2fb;
-  --c-primary-300: #9aa0ea;
-  --c-primary-500: #313bbd; /* botón principal */
-  --c-primary-600: #2a33ad;
-  --c-primary-700: #232a9e;
-  --c-primary-800: #1b1d86; /* barra de cabecera */
-  --c-primary-900: #15166e;
+  /* --- Brand / azul ------------------------------------------------------- */
+  --c-primary-50: #ebf1fd;
+  --c-primary-100: #d0e0fa;
+  --c-primary-300: #7aadef;
+  --c-primary-500: #1851c4; /* botón principal */
+  --c-primary-600: #1446a8;
+  --c-primary-700: #103a8e;
+  --c-primary-800: #0d2e74; /* barra de cabecera */
+  --c-primary-900: #091f50;
 
   /* --- Urgencia (ADR 0005: urgente=rojo, media=naranja, leve=gris) ------ */
   --c-urgente: #dc2626;

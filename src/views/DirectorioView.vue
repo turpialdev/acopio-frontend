@@ -7,6 +7,10 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 import CategoryFilter from '@/components/public/CategoryFilter.vue'
 import CentroCard from '@/components/public/CentroCard.vue'
 import EmergencyContacts from '@/components/public/EmergencyContacts.vue'
+import IconRegistrarCentro from '@/components/icons/IconRegistrarCentro.vue'
+import IconVoluntario from '@/components/icons/IconVoluntario.vue'
+import IconResponsable from '@/components/icons/IconResponsable.vue'
+import IconModerador from '@/components/icons/IconModerador.vue'
 import { catalogo, centros as centrosApi, ApiError } from '@/api'
 import { ESTADOS_VENEZUELA, municipiosDe } from '@/lib/venezuela'
 import type { Categoria, Centro } from '@/types/domain'
@@ -35,10 +39,11 @@ watch(estadoSel, () => {
 // Los tres accesos del diseño. El comportamiento exacto está por definir;
 // voluntario y responsable canjean un código, el moderador usa email/clave.
 const ACCESOS = [
-  { label: 'Voluntario', to: { name: 'acceder', query: { rol: 'voluntario' } } },
-  { label: 'Responsable', to: { name: 'acceder', query: { rol: 'responsable' } } },
-  { label: 'Moderador', to: { name: 'moderador' } },
-] as const
+  { label: 'Registrar centro', to: { name: 'registrar' }, icon: IconRegistrarCentro },
+  { label: 'Voluntario', to: { name: 'acceder', query: { rol: 'voluntario' } }, icon: IconVoluntario },
+  { label: 'Responsable', to: { name: 'acceder', query: { rol: 'responsable' } }, icon: IconResponsable },
+  { label: 'Moderador', to: { name: 'moderador' }, icon: IconModerador },
+]
 
 let peticion = 0
 
@@ -87,17 +92,22 @@ onMounted(async () => {
 <template>
   <div class="dir">
     <div class="content dir__col">
-      <!-- Tres accesos -->
+      <!-- Cuatro accesos en grilla 2×2 -->
       <nav class="accesos" aria-label="Acceso">
         <AppButton
           v-for="a in ACCESOS"
           :key="a.label"
           variant="primary"
+          class="acceso-btn"
           @click="router.push(a.to)"
         >
+          <component :is="a.icon" />
           {{ a.label }}
         </AppButton>
       </nav>
+
+      <!-- Contactos de emergencia -->
+      <EmergencyContacts />
 
       <!-- Panel de búsqueda -->
       <section class="panel">
@@ -146,9 +156,6 @@ onMounted(async () => {
         :categorias="categorias"
       />
 
-      <!-- Contactos de emergencia -->
-      <EmergencyContacts />
-
       <!-- Resultados -->
       <AppSpinner v-if="cargando" label="Cargando centros…" />
 
@@ -190,11 +197,18 @@ onMounted(async () => {
   gap: var(--sp-5);
 }
 
-/* Tres accesos */
+/* Cuatro accesos en grilla 2×2 */
 .accesos {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--sp-3);
+}
+.accesos :deep(.acceso-btn) {
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-3);
+  min-height: 80px;
+  font-size: var(--fs-sm);
 }
 
 /* Panel azul de búsqueda */
