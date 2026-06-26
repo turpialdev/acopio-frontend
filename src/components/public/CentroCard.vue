@@ -66,7 +66,7 @@ async function copiarReporte() {
     </div>
 
     <!-- Cómo llegar -->
-    <AppButton v-if="centro.ubicacion_url" variant="outline" block @click="comoLlegar">
+    <AppButton v-if="centro.ubicacion_url" variant="outline" block class="llegar-btn" @click="comoLlegar">
       <IconComoLlegar />
       Cómo llegar
     </AppButton>
@@ -168,6 +168,18 @@ async function copiarReporte() {
 }
 .info__tel:hover {
   text-decoration: underline;
+}
+
+/* Botón Cómo llegar */
+:deep(.llegar-btn) {
+  background: #e6f2fe;
+  border-color: transparent;
+  color: #2563eb;
+  border-radius: 12px;
+}
+:deep(.llegar-btn:hover:not(:disabled)) {
+  background: #e6f2fe;
+  border-color: #2563eb;
 }
 
 /* Insumos requeridos */
