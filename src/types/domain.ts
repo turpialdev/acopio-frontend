@@ -93,8 +93,8 @@ export interface Totales {
 export interface Sugerencia {
   categoria_id: string
   categoria_nombre: string
-  entradas_hoy: number
-  salidas_hoy: number
+  entradas_total: number
+  salidas_total: number
   urgencia_actual: Urgencia
   mensaje: string
 }

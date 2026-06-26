@@ -72,7 +72,7 @@ onMounted(async () => {
             <p class="sug__cat">{{ s.categoria_nombre }}</p>
             <p class="sug__msg">{{ s.mensaje }}</p>
             <p class="sug__nums">
-              Hoy · entradas {{ s.entradas_hoy }} · salidas {{ s.salidas_hoy }}
+              Total · entradas {{ s.entradas_total }} · salidas {{ s.salidas_total }}
             </p>
           </div>
         </section>
