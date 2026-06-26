@@ -20,6 +20,27 @@ export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY)
 }
 
+// Mensajes de validación de Django REST Framework → español.
+const DRF_ERRORS: Array<[RegExp, string]> = [
+  [/Ensure this field has no more than (\d+) characters?\./i, 'No puede superar los $1 caracteres.'],
+  [/Ensure this field has at least (\d+) characters?\./i, 'Debe tener al menos $1 caracteres.'],
+  [/This field is required\./i, 'Este campo es requerido.'],
+  [/This field may not be blank\./i, 'Este campo no puede estar vacío.'],
+  [/This field may not be null\./i, 'Este campo no puede ser nulo.'],
+  [/Enter a valid email address\./i, 'Ingresa un correo electrónico válido.'],
+  [/A valid integer is required\./i, 'Se requiere un número entero válido.'],
+  [/A valid number is required\./i, 'Se requiere un número válido.'],
+  [/Ensure this value is greater than or equal to (\d+)\./i, 'El valor debe ser mayor o igual a $1.'],
+  [/Ensure this value is less than or equal to (\d+)\./i, 'El valor debe ser menor o igual a $1.'],
+]
+
+function translateError(msg: string): string {
+  for (const [pattern, replacement] of DRF_ERRORS) {
+    if (pattern.test(msg)) return msg.replace(pattern, replacement)
+  }
+  return msg
+}
+
 /**
  * Error de API con el status HTTP y el cuerpo ya parseado.
  * - 400: errores de validación por campo  -> `fields`
@@ -40,7 +61,10 @@ export class ApiError extends Error {
     this.detail = detail
     // Si no hay `detail`, asumimos errores de validación por campo.
     if (!detail && body && typeof body === 'object') {
-      this.fields = body as Record<string, string[]>
+      const raw = body as Record<string, string[]>
+      this.fields = Object.fromEntries(
+        Object.entries(raw).map(([k, v]) => [k, Array.isArray(v) ? v.map(translateError) : v]),
+      )
     }
   }
 

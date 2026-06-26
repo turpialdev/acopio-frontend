@@ -288,7 +288,6 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 }
-}
 .need__remove {
   align-self: flex-end;
   border: none;
