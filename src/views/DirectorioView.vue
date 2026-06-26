@@ -153,7 +153,7 @@ onMounted(async () => {
         </label>
 
         <div class="panel__actions">
-          <AppButton variant="primary" block @click="buscar">
+          <AppButton variant="primary" block class="buscar-btn" @click="buscar">
             <IconSearch />
             Buscar
           </AppButton>
@@ -290,6 +290,14 @@ onMounted(async () => {
   transform: translateY(-50%);
   color: #a6a6a6;
   pointer-events: none;
+}
+:deep(.buscar-btn) {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+:deep(.buscar-btn:hover:not(:disabled)) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
 }
 :deep(.limpiar-btn) {
   background: #e6f2fe;
