@@ -1,72 +1,81 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import IconComoLlegar from '@/components/icons/IconComoLlegar.vue'
+import IconShare from '@/components/icons/IconShare.vue'
 import { URGENCIA_META, VERIFICACION_META, fechaHora } from '@/lib/format'
 import type { Centro } from '@/types/domain'
 
 const props = defineProps<{ centro: Centro }>()
 
 const verif = computed(() => VERIFICACION_META[props.centro.estado_verificacion])
-
-function llamar() {
-  if (props.centro.contacto) window.location.href = `tel:${props.centro.contacto}`
-}
+const copiado = ref(false)
 
 function comoLlegar() {
   if (props.centro.ubicacion_url)
     window.open(props.centro.ubicacion_url, '_blank', 'noopener')
 }
 
-async function compartir() {
+async function copiarReporte() {
   const c = props.centro
-  const texto = `${c.nombre} — ${c.direccion}, ${c.municipio}, ${c.estado}`
-  const url = c.ubicacion_url ?? location.href
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: c.nombre, text: texto, url })
-    } catch {
-      /* el usuario canceló */
+  const lineas: string[] = [
+    `📍 ${c.nombre}`,
+    `${c.municipio}, ${c.estado}`,
+    `Dirección: ${c.direccion}`,
+  ]
+  if (c.contacto) lineas.push(`Contacto: ${c.contacto}`)
+  if (c.necesidades.length) {
+    lineas.push('')
+    lineas.push('Necesidades:')
+    for (const n of c.necesidades) {
+      const urg = n.urgencia === 'urgente' ? '🔴' : n.urgencia === 'media' ? '🟡' : '🟢'
+      const detalle = n.detalle ? ` (${n.detalle})` : ''
+      lineas.push(`${urg} ${n.categoria_nombre}${detalle}`)
     }
-  } else {
-    try {
-      await navigator.clipboard.writeText(`${texto} ${url}`)
-    } catch {
-      /* sin clipboard */
-    }
+  }
+  lineas.push('')
+  lineas.push(`Actualizado: ${fechaHora(c.actualizado_en)}`)
+  try {
+    await navigator.clipboard.writeText(lineas.join('\n'))
+    copiado.value = true
+    setTimeout(() => (copiado.value = false), 2000)
+  } catch {
+    /* sin clipboard */
   }
 }
 </script>
 
 <template>
   <article class="card">
+    <!-- Cabecera: nombre + badge de verificación -->
     <header class="card__head">
       <h3 class="card__title">{{ centro.nombre }}</h3>
       <span class="verif" :class="`verif--${verif.tone}`">{{ verif.label }}</span>
     </header>
 
-    <!-- Dirección -->
-    <div class="row">
-      <div class="row__text">
-        <span class="row__label">Dirección:</span>
-        <p class="row__value">{{ centro.direccion }}</p>
+    <!-- Información del centro -->
+    <div class="info">
+      <div v-if="centro.contacto" class="info__field">
+        <span class="info__label">Número de contacto</span>
+        <a :href="`tel:${centro.contacto}`" class="info__value info__tel">{{ centro.contacto }}</a>
       </div>
-      <AppButton v-if="centro.ubicacion_url" size="sm" @click="comoLlegar">Como llegar</AppButton>
+      <div class="info__field">
+        <span class="info__label">Dirección</span>
+        <p class="info__value">{{ centro.direccion }}, {{ centro.municipio }}, {{ centro.estado }}</p>
+      </div>
     </div>
 
-    <!-- Contacto -->
-    <div v-if="centro.contacto" class="row">
-      <div class="row__text">
-        <span class="row__label">Contacto:</span>
-        <p class="row__value">{{ centro.contacto }}</p>
-      </div>
-      <AppButton size="sm" @click="llamar">Llamar</AppButton>
-    </div>
+    <!-- Cómo llegar -->
+    <AppButton v-if="centro.ubicacion_url" variant="outline" block class="llegar-btn" @click="comoLlegar">
+      <IconComoLlegar />
+      Cómo llegar
+    </AppButton>
 
     <!-- Insumos requeridos -->
-    <section v-if="centro.necesidades.length" class="needs">
-      <p class="needs__head">⚠ Insumos requeridos</p>
-      <p class="needs__updated">ÚLTIMA ACTUALIZACIÓN: {{ fechaHora(centro.actualizado_en) }}</p>
-      <ul class="needs__list">
+    <section class="needs" :class="centro.necesidades.length ? 'needs--con-items' : 'needs--vacio'">
+      <p class="needs__head">Insumos requeridos</p>
+      <p class="needs__updated">Actualizado: {{ fechaHora(centro.actualizado_en) }}</p>
+      <ul v-if="centro.necesidades.length" class="needs__list">
         <li
           v-for="n in centro.necesidades"
           :key="n.id"
@@ -80,9 +89,17 @@ async function compartir() {
           <span v-if="n.detalle" class="chip__detail">{{ n.detalle }}</span>
         </li>
       </ul>
+      <p v-else class="needs__empty">
+        Aún no se reportaron insumos específicos. Cualquier donación o apoyo será bien recibido por
+        este centro.
+      </p>
     </section>
 
-    <AppButton block @click="compartir">Compartir</AppButton>
+    <!-- Copiar reporte -->
+    <AppButton block variant="primary" class="reporte-btn" @click="copiarReporte">
+      <IconShare />
+      {{ copiado ? '¡Copiado!' : 'Copiar reporte para WhatsApp/SMS' }}
+    </AppButton>
   </article>
 </template>
 
@@ -97,19 +114,21 @@ async function compartir() {
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm);
 }
+
+/* Cabecera */
 .card__head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--sp-3);
 }
 .card__title {
-  font-size: var(--fs-xl);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   min-width: 0;
   word-break: break-word;
   overflow-wrap: break-word;
 }
-
 .verif {
   flex-shrink: 0;
   padding: var(--sp-1) var(--sp-3);
@@ -118,57 +137,104 @@ async function compartir() {
   font-weight: var(--fw-semibold);
   color: #fff;
 }
-.verif--success {
-  background: var(--c-success);
-}
-.verif--neutral {
-  background: var(--c-leve);
-}
-.verif--danger {
-  background: var(--c-danger);
-}
+.verif--success { background: var(--c-success); }
+.verif--neutral { background: var(--c-leve); }
+.verif--danger  { background: var(--c-danger); }
 
-.row {
+/* Info */
+.info {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--r-md);
 }
-.row__text {
-  flex: 1;
-  min-width: 0;
+.info__field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.row__label {
-  font-weight: var(--fw-bold);
+.info__label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.info__value {
   font-size: var(--fs-sm);
-}
-.row__value {
-  font-size: var(--fs-sm);
-  color: var(--c-text-muted);
+  color: var(--c-text);
   word-break: break-word;
   overflow-wrap: break-word;
 }
+.info__tel {
+  color: var(--c-primary-600);
+  text-decoration: none;
+  font-weight: var(--fw-medium);
+}
+.info__tel:hover {
+  text-decoration: underline;
+}
 
+/* Botón Copiar reporte */
+:deep(.reporte-btn) {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+:deep(.reporte-btn:hover:not(:disabled)) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+/* Botón Cómo llegar */
+:deep(.llegar-btn) {
+  background: #e6f2fe;
+  border-color: transparent;
+  color: #2563eb;
+  border-radius: 12px;
+}
+:deep(.llegar-btn:hover:not(:disabled)) {
+  background: #e6f2fe;
+  border-color: #2563eb;
+}
+
+/* Insumos requeridos */
 .needs {
   padding: var(--sp-4);
+  border-radius: var(--r-md);
+}
+.needs--con-items {
   background: var(--c-danger-soft);
   border: 1px solid var(--c-danger);
-  border-radius: var(--r-md);
+}
+.needs--con-items .needs__head,
+.needs--con-items .needs__updated {
+  color: var(--c-danger);
+}
+.needs--vacio {
+  background: var(--c-success-soft);
+  border: 1px solid var(--c-success);
+}
+.needs--vacio .needs__head,
+.needs--vacio .needs__updated {
+  color: var(--c-success);
 }
 .needs__head {
   font-weight: var(--fw-bold);
-  font-size: var(--fs-sm);
-  color: var(--c-danger);
+  font-size: var(--fs-base);
 }
 .needs__updated {
   margin-top: var(--sp-1);
   font-size: var(--fs-xs);
-  font-weight: var(--fw-bold);
-  color: var(--c-danger);
+  opacity: 0.85;
+}
+.needs__empty {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px dashed var(--c-success);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  color: var(--c-success);
+  text-align: center;
+  line-height: 1.5;
 }
 .needs__list {
   display: flex;
@@ -181,14 +247,14 @@ async function compartir() {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: var(--sp-2) var(--sp-3);
+  padding: var(--sp-1) var(--sp-3);
   background: var(--chip-soft, var(--c-surface));
   border: 1px solid var(--chip, var(--c-danger));
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   min-width: 0;
 }
 .chip__cat {
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-semibold);
   font-size: var(--fs-sm);
   color: var(--chip, var(--c-danger));
 }
