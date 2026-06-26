@@ -71,6 +71,48 @@ const routes: RouteRecordRaw[] = [
     meta: { requiere: 'moderador' },
   },
   {
+    path: '/moderacion/centros',
+    name: 'mod-centros',
+    component: () => import('@/views/panel/mod/ModCentrosView.vue'),
+    meta: { requiere: 'moderador' },
+  },
+  {
+    path: '/moderacion/centros/:id',
+    name: 'mod-centro',
+    component: () => import('@/views/panel/mod/ModCentroDetailView.vue'),
+    meta: { requiere: 'moderador' },
+  },
+  {
+    path: '/moderacion/reportes',
+    name: 'mod-reportes',
+    component: () => import('@/views/panel/mod/ModReportesView.vue'),
+    meta: { requiere: 'moderador' },
+  },
+  {
+    path: '/moderacion/catalogo',
+    name: 'mod-catalogo',
+    component: () => import('@/views/panel/mod/ModCatalogoView.vue'),
+    meta: { requiere: 'moderador' },
+  },
+  {
+    path: '/moderacion/moderadores',
+    name: 'mod-moderadores',
+    component: () => import('@/views/panel/mod/ModModeradoresView.vue'),
+    meta: { requiere: 'moderador' },
+  },
+  {
+    path: '/moderacion/contactos',
+    name: 'mod-contactos',
+    component: () => import('@/views/panel/mod/ModContactosView.vue'),
+    meta: { requiere: 'moderador' },
+  },
+  {
+    path: '/moderacion/metricas',
+    name: 'mod-metricas',
+    component: () => import('@/views/panel/mod/ModMetricasView.vue'),
+    meta: { requiere: 'moderador' },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/views/NotFoundView.vue'),

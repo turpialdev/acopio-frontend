@@ -120,3 +120,38 @@ export interface SesionModerador {
   moderador_id: string
   nombre: string
 }
+
+// ---- Tipos de moderación ----
+
+export interface Reporte {
+  id: string
+  centro_id: string
+  centro_nombre?: string
+  motivo: MotivoReporte
+  detalle?: string | null
+  reportado_en: string
+  resuelto: boolean
+  resuelto_en?: string | null
+}
+
+export interface ModModerador {
+  id: string
+  nombre: string
+  email: string
+}
+
+export interface ColaModeracion {
+  centros_sin_verificar: Ficha[]
+  reportes_pendientes: Reporte[]
+}
+
+export interface Metricas {
+  centros: {
+    total: number
+    verificados: number
+    sin_verificar: number
+    ocultos: number
+  }
+  necesidades_urgentes: number
+  movimientos_total: number
+}
