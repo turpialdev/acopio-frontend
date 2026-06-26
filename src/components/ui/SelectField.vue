@@ -39,6 +39,7 @@ defineEmits<{ 'update:modelValue': [value: string] }>()
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
+  min-width: 0;
 }
 .field__label {
   font-size: var(--fs-sm);
@@ -49,6 +50,8 @@ defineEmits<{ 'update:modelValue': [value: string] }>()
   color: var(--c-danger);
 }
 .field__select {
+  width: 100%;
+  min-width: 0;
   padding: var(--sp-3);
   border: 1px solid var(--c-border-strong);
   border-radius: var(--r-md);
