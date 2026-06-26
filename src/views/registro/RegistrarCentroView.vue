@@ -6,10 +6,10 @@ import TextField from '@/components/ui/TextField.vue'
 import SelectField from '@/components/ui/SelectField.vue'
 import PageHero from '@/components/layout/PageHero.vue'
 import IconPersonAdd from '@/components/icons/IconPersonAdd.vue'
-import { auth as authApi, catalogo, centros as centrosApi, necesidades, ApiError } from '@/api'
+import { auth as authApi, catalogo, centros as centrosApi, ApiError } from '@/api'
 import { useAuth } from '@/composables/useAuth'
 import { ESTADOS_VENEZUELA, municipiosDe } from '@/lib/venezuela'
-import type { CargoResponsable } from '@/types/domain'
+import type { CargoResponsable, Urgencia } from '@/types/domain'
 
 const router = useRouter()
 const { iniciarSesionCodigo } = useAuth()
@@ -24,12 +24,34 @@ const CARGOS: { value: CargoResponsable; label: string }[] = [
   { value: 'gerente', label: 'Gerente' },
 ]
 
+const URGENCIAS: { value: string; label: string }[] = [
+  { value: 'urgente', label: 'Urgente' },
+  { value: 'media', label: 'Media' },
+  { value: 'leve', label: 'Leve' },
+]
+
+interface FilaNecesidad {
+  categoria_id: string
+  urgencia: Urgencia
+  detalle: string
+}
+const necesidadesForm = ref<FilaNecesidad[]>([])
+
+function agregarNecesidad() {
+  necesidadesForm.value.push({ categoria_id: '', urgencia: 'media', detalle: '' })
+}
+function quitarNecesidad(i: number) {
+  necesidadesForm.value.splice(i, 1)
+}
+
 const form = reactive({
   nombre: '',
   estado: '',
   municipio: '',
-  categoria_principal: '',
   direccion: '',
+  contacto: '',
+  horario: '',
+  vialidad: '',
   nombre_responsable: '',
   telefono_responsable: '',
   cargo_responsable: '',
@@ -97,18 +119,27 @@ async function crear() {
 
   enviando.value = true
   try {
+    const filasValidas = necesidadesForm.value.filter((f) => f.categoria_id)
     const creado = await centrosApi.crearCentro({
       nombre: form.nombre,
       estado: form.estado,
       municipio: form.municipio,
       direccion: form.direccion,
+      contacto: form.contacto || undefined,
+      horario: form.horario || undefined,
+      vialidad: form.vialidad || undefined,
       nombre_responsable: form.nombre_responsable,
       telefono_responsable: form.telefono_responsable,
       cargo_responsable: form.cargo_responsable as CargoResponsable,
+      necesidades: filasValidas.map((f) => ({
+        categoria_id: f.categoria_id,
+        urgencia: f.urgencia,
+        detalle: f.detalle || undefined,
+      })),
     })
     codigoRaiz.value = creado.codigo_raiz
 
-    // Canjear el código raíz por un JWT y registrar la necesidad principal.
+    // Canjear el código raíz por un JWT.
     const sesion = await authApi.loginConCodigo(creado.codigo_raiz)
     iniciarSesionCodigo({
       token: sesion.token,
@@ -116,17 +147,6 @@ async function crear() {
       centroId: sesion.centro_id,
       etiqueta: sesion.etiqueta,
     })
-    if (form.categoria_principal) {
-      try {
-        await necesidades.crearNecesidad({
-          centro_id: creado.id,
-          categoria_id: form.categoria_principal,
-          urgencia: 'media',
-        })
-      } catch {
-        /* la necesidad es secundaria; no bloquea el registro */
-      }
-    }
 
     paso.value = 'codigo'
   } catch (e) {
@@ -203,13 +223,6 @@ onMounted(async () => {
             :options="opcionesMunicipio"
             :error="campoError('municipio')"
           />
-          <SelectField
-            v-model="form.categoria_principal"
-            label="Categoría principal (opcional)"
-            placeholder="Tipo de insumos que reciben"
-            :options="opcionesCategoria"
-            :error="campoError('categoria_principal')"
-          />
           <TextField
             v-model="form.direccion"
             label="Dirección"
@@ -218,6 +231,27 @@ onMounted(async () => {
             placeholder="Calle, sector, referencia"
             hint="Referencia que permita ubicar el centro físicamente"
             :error="campoError('direccion')"
+          />
+          <TextField
+            v-model="form.contacto"
+            label="Teléfono (opcional)"
+            :maxlength="100"
+            placeholder="+58 212 000-0000"
+            :error="campoError('contacto')"
+          />
+          <TextField
+            v-model="form.horario"
+            label="Horario de trabajo (opcional)"
+            :maxlength="300"
+            placeholder="Ej: Lunes a viernes 8am – 5pm"
+            :error="campoError('horario')"
+          />
+          <TextField
+            v-model="form.vialidad"
+            label="Vialidad (opcional)"
+            :maxlength="300"
+            placeholder="Ej: Acceso por vía principal, sin restricciones"
+            :error="campoError('vialidad')"
           />
         </fieldset>
 
@@ -247,6 +281,45 @@ onMounted(async () => {
             :options="CARGOS"
             :error="campoError('cargo_responsable')"
           />
+        </fieldset>
+
+        <!-- Necesidades del centro -->
+        <fieldset class="section">
+          <legend class="section__title">Necesidades del centro</legend>
+
+          <div v-if="!necesidadesForm.length" class="needs-empty">
+            Aún no agregaste ninguna necesidad. Puedes agregarlas ahora o hacerlo más tarde desde tu
+            panel.
+          </div>
+
+          <div v-for="(fila, i) in necesidadesForm" :key="i" class="need">
+            <div class="need__grid">
+              <SelectField
+                v-model="fila.categoria_id"
+                label="Insumo"
+                placeholder="Selecciona un insumo"
+                :options="opcionesCategoria"
+              />
+              <SelectField
+                v-model="fila.urgencia"
+                label="Urgencia"
+                :options="URGENCIAS"
+              />
+            </div>
+            <TextField
+              v-model="fila.detalle"
+              label="Detalle (opcional)"
+              :maxlength="200"
+              placeholder="Ej: Preferiblemente en lata"
+            />
+            <button type="button" class="need__remove" @click="quitarNecesidad(i)">
+              Quitar
+            </button>
+          </div>
+
+          <AppButton type="button" variant="outline" size="sm" @click="agregarNecesidad">
+            + Agregar necesidad
+          </AppButton>
         </fieldset>
 
         <p v-if="errorGeneral" class="form__error">{{ errorGeneral }}</p>
@@ -308,6 +381,45 @@ onMounted(async () => {
 .form__error {
   color: var(--c-danger);
   font-size: var(--fs-sm);
+}
+
+/* Necesidades */
+.needs-empty {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px dashed var(--c-border);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+  text-align: center;
+  line-height: 1.5;
+}
+.need {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+}
+.need__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.need__remove {
+  align-self: flex-end;
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--c-danger);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--c-danger);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.need__remove:hover {
+  background: var(--c-danger-soft);
 }
 
 /* Paso 2 */

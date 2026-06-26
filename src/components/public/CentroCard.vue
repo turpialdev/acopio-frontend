@@ -67,9 +67,9 @@ async function copiarReporte() {
     <div class="info">
       <!-- Fila 1: contacto | estado de acceso -->
       <div class="info__row2">
-        <div v-if="centro.contacto" class="info__field">
-          <span class="info__label">Números de contacto</span>
-          <a :href="`tel:${centro.contacto}`" class="info__value info__tel">{{ centro.contacto }}</a>
+        <div v-if="centro.horario" class="info__field">
+          <span class="info__label">Horario de atención</span>
+          <p class="info__value">{{ centro.horario }}</p>
         </div>
         <div v-if="centro.vialidad" class="info__field">
           <span class="info__label">Estado de acceso</span>

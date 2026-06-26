@@ -32,6 +32,7 @@ export interface Centro {
   municipio: string
   direccion: string
   contacto?: string | null
+  horario?: string | null
   ubicacion_url?: string | null
   lat?: number | null
   lng?: number | null
