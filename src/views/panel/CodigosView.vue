@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import AppButton from '@/components/ui/AppButton.vue'
 import AppSpinner from '@/components/ui/AppSpinner.vue'
-import TextField from '@/components/ui/TextField.vue'
-import PageHero from '@/components/layout/PageHero.vue'
-import IconPersonAdd from '@/components/icons/IconPersonAdd.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 import { codigos as codigosApi, ApiError } from '@/api'
 import { useAuth } from '@/composables/useAuth'
 import type { CodigoVoluntario } from '@/types/domain'
@@ -16,48 +13,16 @@ const { sesion } = useAuth()
 const lista = ref<CodigoVoluntario[]>([])
 const cargando = ref(true)
 const error = ref('')
-
-const etiqueta = ref('')
-const creando = ref(false)
-const errorCrear = ref('')
-// Código en texto plano recién creado (se muestra una sola vez).
-const nuevoCodigo = ref<{ etiqueta: string; codigo: string } | null>(null)
-const copiado = ref(false)
-
+const busqueda = ref('')
 const revocando = ref<string | null>(null)
 
-async function crear() {
-  const id = sesion.centroId
-  if (!id || !etiqueta.value.trim()) {
-    errorCrear.value = 'Indica una etiqueta (ej: "Juan - Puerta").'
-    return
-  }
-  creando.value = true
-  errorCrear.value = ''
-  try {
-    const c = await codigosApi.crearCodigo(id, etiqueta.value.trim())
-    nuevoCodigo.value = { etiqueta: c.etiqueta, codigo: c.codigo }
-    lista.value.unshift({ id: c.id, etiqueta: c.etiqueta, rol: 'voluntario', revocado_en: null })
-    etiqueta.value = ''
-  } catch (e) {
-    errorCrear.value = e instanceof ApiError ? e.firstMessage : 'No se pudo crear el código.'
-  } finally {
-    creando.value = false
-  }
-}
+const filtrados = computed(() => {
+  const q = busqueda.value.trim().toLowerCase()
+  if (!q) return lista.value
+  return lista.value.filter((c) => c.etiqueta.toLowerCase().includes(q))
+})
 
-async function copiar() {
-  if (!nuevoCodigo.value) return
-  try {
-    await navigator.clipboard.writeText(nuevoCodigo.value.codigo)
-    copiado.value = true
-    setTimeout(() => (copiado.value = false), 2000)
-  } catch {
-    /* copiar manualmente */
-  }
-}
-
-async function revocar(c: CodigoVoluntario) {
+async function eliminar(c: CodigoVoluntario) {
   const id = sesion.centroId
   if (!id) return
   revocando.value = c.id
@@ -65,10 +30,19 @@ async function revocar(c: CodigoVoluntario) {
     await codigosApi.revocarCodigo(id, c.id)
     c.revocado_en = new Date().toISOString()
   } catch {
-    /* ignora; el ítem queda como estaba */
+    /* ignora */
   } finally {
     revocando.value = null
   }
+}
+
+function fechaCreacion(c: CodigoVoluntario): string {
+  if (!c.creado_en) return ''
+  const d = new Date(c.creado_en)
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  return `${dd}/${mm}/${yyyy}`
 }
 
 onMounted(async () => {
@@ -89,141 +63,258 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <PageHero
-      title="Códigos de voluntario"
-      subtitle="Crea un código por voluntario. Cada uno accede sólo al inventario."
-    >
-      <template #icon><IconPersonAdd /></template>
-    </PageHero>
+  <div class="page">
+    <div class="content wrap">
 
-    <div class="content page-pad">
-      <!-- Crear -->
-      <form class="card" @submit.prevent="crear">
-        <TextField
-          v-model="etiqueta"
-          label="Etiqueta del voluntario"
-          placeholder="Ej: María - Almacén"
-          :error="errorCrear"
-        />
-        <AppButton type="submit" block :loading="creando">Crear código</AppButton>
-      </form>
+      <!-- Volver -->
+      <button class="back" type="button" @click="router.push({ name: 'panel-centro' })">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+        Volver
+      </button>
 
-      <!-- Código recién creado (una sola vez) -->
-      <div v-if="nuevoCodigo" class="nuevo">
-        <p class="nuevo__lead">
-          Código para <strong>{{ nuevoCodigo.etiqueta }}</strong> — entrégalo al voluntario.
-          <strong>No se volverá a mostrar.</strong>
-        </p>
-        <div class="codigo">
-          <code class="codigo__value">{{ nuevoCodigo.codigo }}</code>
-          <AppButton variant="outline" size="sm" @click="copiar">
-            {{ copiado ? 'Copiado ✓' : 'Copiar' }}
-          </AppButton>
+      <h1 class="encabezado__titulo">Administrar Voluntarios</h1>
+
+      <!-- Buscador card -->
+      <div class="buscar-card">
+        <div class="buscar__field">
+          <svg class="buscar__icon" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" />
+            <path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+          <input v-model="busqueda" class="buscar__input" type="text" placeholder="Buscar voluntarios"
+            aria-label="Buscar voluntarios" />
         </div>
+        <button class="btn-buscar" type="button">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" />
+            <path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+          Buscar
+        </button>
       </div>
 
-      <!-- Listado -->
-      <AppSpinner v-if="cargando" label="Cargando códigos…" />
-      <p v-else-if="error" class="error">{{ error }}</p>
-      <p v-else-if="!lista.length" class="empty">Aún no hay códigos de voluntario.</p>
-      <ul v-else class="lista">
-        <li v-for="c in lista" :key="c.id" class="item" :class="{ 'is-rev': c.revocado_en }">
-          <div>
-            <p class="item__label">{{ c.etiqueta || 'Sin etiqueta' }}</p>
-            <p class="item__estado">{{ c.revocado_en ? 'Revocado' : 'Activo' }}</p>
+      <!-- Spinner / Error -->
+      <AppSpinner v-if="cargando" label="Cargando voluntarios…" />
+
+      <EmptyState v-else-if="error" icon="⚠" tone="error" title="Error" :description="error" />
+
+      <EmptyState v-else-if="!filtrados.length" icon="👤" title="Sin voluntarios"
+        description="No hay voluntarios registrados aún." />
+
+      <!-- Lista de voluntarios -->
+      <div v-else class="lista">
+        <article v-for="c in filtrados" :key="c.id" class="vol-card" :class="{ 'vol-card--revocado': c.revocado_en }">
+          <div class="vol__info">
+            <p class="vol__nombre">{{ c.etiqueta || 'Sin etiqueta' }}</p>
+            <p v-if="fechaCreacion(c)" class="vol__fecha">
+              Fecha de creación: {{ fechaCreacion(c) }}
+            </p>
+            <p v-if="c.revocado_en" class="vol__revocado">Revocado</p>
           </div>
-          <AppButton
-            v-if="!c.revocado_en"
-            variant="ghost"
-            size="sm"
-            :loading="revocando === c.id"
-            @click="revocar(c)"
-          >
-            Revocar
-          </AppButton>
-        </li>
-      </ul>
+
+          <div v-if="!c.revocado_en" class="vol__acciones">
+            <button class="btn-revocar" type="button" :disabled="revocando === c.id" @click="eliminar(c)">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M2 4h12M5.333 4V2.667h5.334V4M6.667 7.333v4M9.333 7.333v4M3.333 4l.667 9.333h8L12.667 4"
+                  stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              {{ revocando === c.id ? '…' : 'Revocar' }}
+            </button>
+          </div>
+        </article>
+      </div>
+
     </div>
   </div>
 </template>
 
 <style scoped>
-.page-pad {
-  padding-block: var(--sp-5) var(--sp-10);
+.page {
+  min-height: 100vh;
+  background: var(--c-surface);
+}
+
+.wrap {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
+  padding-block: var(--sp-5) var(--sp-12);
 }
-.card {
+
+/* Volver */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  background: #e6f2fe;
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  color: #2563eb;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.back:hover {
+  border-color: #2563eb;
+}
+
+/* Encabezado */
+.encabezado__titulo {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
+}
+
+/* Buscador card */
+.buscar-card {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
   padding: var(--sp-5);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.buscar-card__titulo {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
+}
+
+.buscar__field {
+  position: relative;
+}
+
+.buscar__icon {
+  position: absolute;
+  left: var(--sp-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--c-text-faint);
+  pointer-events: none;
+}
+
+.buscar__input {
+  width: 100%;
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) + 18px + var(--sp-2));
+  border: none;
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow-sm);
+  background: var(--c-surface-2);
+  font-size: var(--fs-base);
+  color: var(--c-text);
 }
-.nuevo {
-  padding: var(--sp-4);
-  background: var(--c-primary-50);
-  border: 1px dashed var(--c-primary-300);
-  border-radius: var(--r-md);
+
+.buscar__input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #2563eb40;
 }
-.nuevo__lead {
-  font-size: var(--fs-sm);
-}
-.codigo {
+
+.btn-buscar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  margin-top: var(--sp-3);
+  justify-content: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-4);
+  background: #2563eb;
+  border: none;
+  border-radius: var(--r-xl);
+  color: #fff;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
 }
-.codigo__value {
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: var(--fs-lg);
-  font-weight: var(--fw-bold);
-  color: var(--c-primary-700);
-  letter-spacing: 0.05em;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+.btn-buscar:hover {
+  background: #1d4ed8;
 }
-.error {
-  color: var(--c-danger);
-  font-size: var(--fs-sm);
-}
-.empty {
-  color: var(--c-text-muted);
-  font-size: var(--fs-sm);
-}
+
+/* Lista */
 .lista {
-  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
+  gap: var(--sp-3);
 }
-.item {
+
+/* Tarjeta voluntario */
+.vol-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
-  border-radius: var(--r-md);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
 }
-.item.is-rev {
-  opacity: 0.6;
+
+.vol-card--revocado {
+  opacity: 0.55;
 }
-.item__label {
+
+.vol__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.vol__nombre {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
+}
+
+.vol__fecha {
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+}
+
+.vol__revocado {
+  font-size: var(--fs-xs);
+  color: var(--c-danger);
   font-weight: var(--fw-semibold);
 }
-.item__estado {
-  font-size: var(--fs-xs);
-  color: var(--c-text-muted);
+
+.vol__acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+}
+
+/* Botón revocar */
+.btn-revocar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-3);
+  background: transparent;
+  border: 1.5px solid #dc2626;
+  border-radius: var(--r-lg);
+  color: #dc2626;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.btn-revocar:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.btn-revocar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

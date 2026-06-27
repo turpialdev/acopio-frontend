@@ -236,7 +236,7 @@ onMounted(async () => {
   border-radius: var(--r-xl);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 .panel__title {
   font-size: var(--fs-lg);

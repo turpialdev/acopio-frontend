@@ -3,7 +3,7 @@
 <template>
   <footer class="footer">
     <div class="content footer__inner">
-      <p class="footer__title">Acopio Venezuela</p>
+      <p class="footer__title">Centros de Acopio - Comunidad Pádel</p>
       <p class="footer__note">
         Coordinación de ayuda humanitaria · Emergencia 24 jun 2026
       </p>

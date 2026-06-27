@@ -55,10 +55,12 @@ defineEmits<{ 'update:modelValue': [value: string] }>()
 .field__input {
   width: 100%;
   min-width: 0;
-  padding: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
   border: 1px solid var(--c-border-strong);
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
   background: var(--c-surface);
+  font-size: var(--fs-base);
+  color: var(--c-text);
   transition: border-color 0.15s;
 }
 .field__input:focus {

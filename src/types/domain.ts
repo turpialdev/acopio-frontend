@@ -108,6 +108,7 @@ export interface CodigoVoluntario {
   id: string
   etiqueta: string
   rol: 'voluntario'
+  creado_en?: string | null
   revocado_en?: string | null
 }
 

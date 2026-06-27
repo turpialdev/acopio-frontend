@@ -1,21 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import AppButton from '@/components/ui/AppButton.vue'
 import AppSpinner from '@/components/ui/AppSpinner.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
-import PageHero from '@/components/layout/PageHero.vue'
-import IconPersonAdd from '@/components/icons/IconPersonAdd.vue'
 import MovimientoRow from '@/components/inventario/MovimientoRow.vue'
 import { catalogo, centros as centrosApi, movimientos as movApi, ApiError } from '@/api'
 import { useAuth } from '@/composables/useAuth'
-import { esHoy, fechaDia, minutosDesde } from '@/lib/format'
+import { minutosDesde } from '@/lib/format'
 import type { Movimiento, Totales } from '@/types/domain'
 
 const router = useRouter()
 const { esVoluntario, esResponsable, sesion } = useAuth()
 
-// El voluntario corrige sus registros dentro de 1 hora; el responsable, sin límite.
 const VENTANA_MIN = 60
 
 const todos = ref<Movimiento[]>([])
@@ -24,6 +20,7 @@ const totales = ref<Totales | null>(null)
 const cargando = ref(true)
 const error = ref('')
 const busqueda = ref('')
+const filtroTipo = ref<'todo' | 'entrada' | 'salida'>('todo')
 
 function nombreCategoria(id: string): string {
   return catMap.value[id] ?? 'Insumo'
@@ -34,34 +31,19 @@ function puedeCorregir(m: Movimiento): boolean {
   return esVoluntario.value && minutosDesde(m.registrado_en) < VENTANA_MIN
 }
 
-// Filtro de texto sobre categoría, nota y contraparte.
 const filtrados = computed(() => {
+  let result = todos.value
+  if (filtroTipo.value !== 'todo')
+    result = result.filter((m) => m.tipo === filtroTipo.value)
   const q = busqueda.value.trim().toLowerCase()
-  if (!q) return todos.value
-  return todos.value.filter((m) =>
+  if (!q) return result
+  return result.filter((m) =>
     [nombreCategoria(m.categoria_id), m.nota ?? '', m.contraparte ?? '', m.registrado_por]
       .join(' ')
       .toLowerCase()
       .includes(q),
   )
 })
-
-const deHoy = computed(() => filtrados.value.filter((m) => esHoy(m.registrado_en)))
-
-// Movimientos anteriores agrupados por día (ya vienen ordenados desc).
-const anteriores = computed(() => {
-  const grupos: { fecha: string; items: Movimiento[] }[] = []
-  for (const m of filtrados.value) {
-    if (esHoy(m.registrado_en)) continue
-    const fecha = fechaDia(m.registrado_en)
-    const grupo = grupos.find((g) => g.fecha === fecha)
-    if (grupo) grupo.items.push(m)
-    else grupos.push({ fecha, items: [m] })
-  }
-  return grupos
-})
-
-const hoyLabel = computed(() => fechaDia(new Date().toISOString()))
 
 function alActualizar(m: Movimiento) {
   const i = todos.value.findIndex((x) => x.id === m.id)
@@ -75,7 +57,6 @@ onMounted(async () => {
     return
   }
   try {
-    // Catálogo completo para mapear categoria_id → nombre.
     const [cats, movs, tots] = await Promise.all([
       catalogo.listarCategorias(),
       movApi.listarMovimientos(sesion.centroId),
@@ -93,30 +74,63 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <PageHero title="Registro Inventario actual">
-      <div class="search">
-        <span class="search__label">Buscar insumos</span>
-        <div class="search__field">
-          <span class="search__icon" aria-hidden="true">⌕</span>
+  <div class="page">
+    <div class="content wrap">
+
+      <!-- Volver -->
+      <button class="back" type="button" @click="router.back()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Volver
+      </button>
+
+      <!-- Buscador card -->
+      <div class="buscar-card">
+        <h1 class="titulo">Buscar registros</h1>
+        <div class="buscar__field">
+          <svg class="buscar__icon" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
           <input
             v-model="busqueda"
-            class="search__input"
-            type="search"
-            placeholder="Buscar insumo, donante o responsable…"
-            aria-label="Buscar insumos"
+            class="buscar__input"
+            type="text"
+            placeholder="..."
+            aria-label="Buscar registros"
           />
         </div>
-        <AppButton variant="light" block>Buscar</AppButton>
+        <button class="btn-buscar" type="button">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Buscar
+        </button>
       </div>
-    </PageHero>
 
-    <div class="content page-pad">
-      <AppButton variant="outline" block @click="router.push({ name: 'inventario' })">
-        ← Registrar movimiento
-      </AppButton>
+      <!-- Filtros tipo -->
+      <div class="filtros" role="tablist">
+        <button
+          class="filtro"
+          :class="{ 'filtro--active': filtroTipo === 'todo' }"
+          @click="filtroTipo = 'todo'"
+        >Todo</button>
+        <button
+          class="filtro"
+          :class="{ 'filtro--active': filtroTipo === 'entrada' }"
+          @click="filtroTipo = 'entrada'"
+        >Ingresos</button>
+        <button
+          class="filtro"
+          :class="{ 'filtro--active': filtroTipo === 'salida' }"
+          @click="filtroTipo = 'salida'"
+        >Egresos</button>
+      </div>
 
-      <AppSpinner v-if="cargando" label="Cargando movimientos…" />
+      <!-- Lista -->
+      <AppSpinner v-if="cargando" label="Cargando registros…" />
 
       <EmptyState
         v-else-if="error"
@@ -129,45 +143,24 @@ onMounted(async () => {
       <EmptyState
         v-else-if="!filtrados.length"
         icon="📋"
-        title="Sin movimientos"
-        description="Aún no hay registros que coincidan."
+        title="Sin registros"
+        description="No hay movimientos que coincidan."
       />
 
-      <template v-else>
-        <!-- HOY -->
-        <section v-if="deHoy.length" class="group">
-          <h2 class="group__title">HOY · {{ hoyLabel }}</h2>
-          <MovimientoRow
-            v-for="m in deHoy"
-            :key="m.id"
-            :movimiento="m"
-            :categoria-nombre="nombreCategoria(m.categoria_id)"
-            :puede-corregir="puedeCorregir(m)"
-            :centro-id="sesion.centroId ?? ''"
-            @updated="alActualizar"
-          />
-        </section>
+      <div v-else class="lista">
+        <MovimientoRow
+          v-for="m in filtrados"
+          :key="m.id"
+          :movimiento="m"
+          :categoria-nombre="nombreCategoria(m.categoria_id)"
+          :puede-corregir="puedeCorregir(m)"
+          :centro-id="sesion.centroId ?? ''"
+          @updated="alActualizar"
+        />
+      </div>
 
-        <!-- REGISTROS ANTERIORES -->
-        <template v-if="anteriores.length">
-          <div class="divider"><span>Registros anteriores</span></div>
-          <section v-for="g in anteriores" :key="g.fecha" class="group">
-            <h2 class="group__title">{{ g.fecha }}</h2>
-            <MovimientoRow
-              v-for="m in g.items"
-              :key="m.id"
-              :movimiento="m"
-              :categoria-nombre="nombreCategoria(m.categoria_id)"
-              :puede-corregir="puedeCorregir(m)"
-              :centro-id="sesion.centroId ?? ''"
-              @updated="alActualizar"
-            />
-          </section>
-        </template>
-      </template>
-
-      <!-- Totales registrados (no existencias — ADR 0007) -->
-      <section v-if="!cargando && totales && totales.categorias.length" class="totales">
+      <!-- Totales registrados (ADR 0007) -->
+      <section v-if="!cargando && totales && totales.categorias.length" class="totales totales-card">
         <h2 class="totales__title">Totales registrados</h2>
         <div class="tabla-wrap">
           <table class="tabla">
@@ -188,54 +181,138 @@ onMounted(async () => {
           </table>
         </div>
       </section>
+
     </div>
   </div>
 </template>
 
 <style scoped>
-.search {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-.search__label {
-  font-size: var(--fs-sm);
-  color: rgba(255, 255, 255, 0.85);
-}
-.search__field {
-  position: relative;
-}
-.search__icon {
-  position: absolute;
-  left: var(--sp-3);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--c-text-faint);
-  font-size: 1.2rem;
-}
-.search__input {
-  width: 100%;
-  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-8);
-  border: none;
-  border-radius: var(--r-md);
+.page {
+  min-height: 100vh;
   background: var(--c-surface);
-  color: var(--c-text);
 }
-
-.page-pad {
-  padding-block: var(--sp-5) var(--sp-10);
+.wrap {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
+  padding-block: var(--sp-5) var(--sp-12);
 }
 
+/* Volver */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  background: #e6f2fe;
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  color: #2563eb;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  align-self: flex-start;
+}
+.back:hover { border-color: #2563eb; }
+
+/* Buscador card */
+.buscar-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
+}
+.titulo {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
+}
+.buscar__field {
+  position: relative;
+}
+.buscar__icon {
+  position: absolute;
+  left: var(--sp-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--c-text-faint);
+  pointer-events: none;
+}
+.buscar__input {
+  width: 100%;
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) + 18px + var(--sp-2));
+  border: none;
+  border-radius: var(--r-lg);
+  background: var(--c-surface-2);
+  font-size: var(--fs-base);
+  color: var(--c-text);
+}
+.buscar__input:focus { outline: none; box-shadow: 0 0 0 2px #2563eb40; }
+.btn-buscar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-4);
+  background: #2563eb;
+  border: none;
+  border-radius: var(--r-xl);
+  color: #fff;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+.btn-buscar:hover { background: #1d4ed8; }
+
+/* Filtros */
+.filtros {
+  display: flex;
+  gap: var(--sp-2);
+}
+.filtro {
+  padding: var(--sp-2) var(--sp-4);
+  border: 1.5px solid #2563eb;
+  border-radius: var(--r-lg);
+  background: #fff;
+  color: #2563eb;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filtro--active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+/* Lista */
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* Totales */
+.totales-card {
+  padding: var(--sp-5);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
+}
 .totales__title {
   font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
   margin-bottom: var(--sp-3);
 }
-.tabla-wrap {
-  overflow-x: auto;
-}
+.tabla-wrap { overflow-x: auto; }
 .tabla {
   width: 100%;
   border-collapse: collapse;
@@ -257,42 +334,9 @@ onMounted(async () => {
   letter-spacing: 0.04em;
   color: var(--c-text-faint);
 }
-.tabla tbody tr:last-child td {
-  border-bottom: none;
-}
+.tabla tbody tr:last-child td { border-bottom: none; }
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
-}
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-}
-.group__title {
-  font-family: var(--font-sans);
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--c-text-faint);
-}
-.divider {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  margin-top: var(--sp-2);
-  color: var(--c-text-faint);
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--c-border);
 }
 </style>
