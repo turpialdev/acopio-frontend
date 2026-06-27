@@ -31,6 +31,7 @@ export interface NuevoCentro {
   direccion: string
   contacto?: string
   horario?: string
+  ubicacion_url?: string
   vialidad?: string
   nombre_responsable: string
   telefono_responsable: string
