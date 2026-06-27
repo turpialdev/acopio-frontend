@@ -14,6 +14,15 @@ const creando = ref(false)
 const error = ref('')
 const codigoCreado = ref('')
 const compartido = ref(false)
+const copiado = ref(false)
+
+async function copiarCodigo() {
+  try {
+    await navigator.clipboard.writeText(codigoCreado.value)
+    copiado.value = true
+    setTimeout(() => (copiado.value = false), 2000)
+  } catch { /* el usuario puede copiar manualmente */ }
+}
 
 async function crear() {
   if (!etiqueta.value.trim()) {
@@ -101,17 +110,22 @@ async function compartir() {
           </p>
         </div>
 
-        <!-- Campo código readonly -->
+        <!-- Campo código readonly + copiar -->
         <div class="campo">
           <label class="campo__label">
             Código de Voluntario<span class="campo__req" aria-hidden="true">*</span>
           </label>
-          <input
-            class="campo__input"
-            :value="codigoCreado"
-            readonly
-            @click="($event.target as HTMLInputElement).select()"
-          />
+          <div class="campo__wrap">
+            <input
+              class="campo__input"
+              :value="codigoCreado"
+              readonly
+              @click="($event.target as HTMLInputElement).select()"
+            />
+            <button type="button" class="campo__copy" @click="copiarCodigo">
+              {{ copiado ? '✓' : 'Copiar' }}
+            </button>
+          </div>
         </div>
 
         <!-- Botón compartir -->
@@ -234,17 +248,38 @@ async function compartir() {
   color: var(--c-text);
 }
 .campo__req { color: var(--c-danger); margin-left: 2px; }
+.campo__wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
 .campo__input {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: var(--sp-3) var(--sp-4);
   border: 1px solid var(--c-border-strong);
   border-radius: var(--r-lg);
   background: var(--c-surface);
   font-size: var(--fs-base);
   font-weight: var(--fw-semibold);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   color: var(--c-text);
   cursor: text;
 }
+.campo__input:focus { outline: none; }
+.campo__copy {
+  flex-shrink: 0;
+  padding: var(--sp-3) var(--sp-4);
+  background: #e6f2fe;
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  color: #2563eb;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.campo__copy:hover { border-color: #2563eb; }
 
 /* Botón compartir */
 .btn-compartir {
