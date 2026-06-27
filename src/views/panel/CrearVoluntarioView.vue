@@ -97,9 +97,8 @@ async function compartir() {
       <div v-else class="card card--exito">
         <!-- Ícono check verde -->
         <div class="check-circle">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <path d="M6 17l6 6L26 9" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M11 17l4 4" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M24.8418 10.8418C25.2974 10.3862 26.0359 10.3862 26.4915 10.8418C26.9471 11.2974 26.9471 12.0359 26.4915 12.4916L17.7415 21.2416C17.2859 21.6972 16.5474 21.6972 16.0918 21.2416L14.3418 19.4916L14.262 19.4027C13.8883 18.9444 13.9147 18.2689 14.3418 17.8418C14.7689 17.4147 15.4444 17.3883 15.9027 17.7621L15.9915 17.8418L16.9167 18.7669L24.8418 10.8418ZM20.1751 6.17514C20.6307 5.71953 21.3693 5.71953 21.8249 6.17514C22.2805 6.63076 22.2805 7.36927 21.8249 7.82488L8.99153 20.6582C8.53592 21.1138 7.7974 21.1138 7.34179 20.6582L1.50846 14.8249C1.05285 14.3693 1.05285 13.6308 1.50846 13.1751C1.93559 12.748 2.61109 12.7216 3.06933 13.0954L3.1582 13.1751L8.16666 18.1836L20.1751 6.17514Z" fill="#16A34A"/>
           </svg>
         </div>
 
