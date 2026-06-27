@@ -53,6 +53,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiere: 'responsable' },
   },
   {
+    path: '/panel/codigos/crear',
+    name: 'panel-codigos-crear',
+    component: () => import('@/views/panel/CrearVoluntarioView.vue'),
+    meta: { requiere: 'responsable' },
+  },
+  {
     path: '/inventario',
     name: 'inventario',
     component: () => import('@/views/panel/InventarioView.vue'),
