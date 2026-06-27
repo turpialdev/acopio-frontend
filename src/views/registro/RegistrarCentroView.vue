@@ -73,6 +73,29 @@ const enviando = ref(false)
 const codigoRaiz = ref('')
 const copiado = ref(false)
 
+const geolocalizando = ref(false)
+const errorGeo = ref('')
+
+function usarUbicacion() {
+  if (!navigator.geolocation) {
+    errorGeo.value = 'Tu dispositivo no soporta geolocalización.'
+    return
+  }
+  geolocalizando.value = true
+  errorGeo.value = ''
+  navigator.geolocation.getCurrentPosition(
+    ({ coords }) => {
+      form.ubicacion_url = `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`
+      geolocalizando.value = false
+    },
+    () => {
+      errorGeo.value = 'No se pudo obtener la ubicación. Verifica los permisos.'
+      geolocalizando.value = false
+    },
+    { timeout: 10000 },
+  )
+}
+
 function campoError(campo: string): string {
   return errores.value[campo] ?? ''
 }
@@ -223,14 +246,40 @@ onMounted(async () => {
             placeholder="Calle, sector, referencia"
             :error="campoError('direccion')"
           />
-          <TextField
-            v-model="form.ubicacion_url"
-            label="Link Google Maps"
-            :maxlength="500"
-            placeholder="https://maps.google.com/…"
-            hint="Referencia que permita ubicar el centro físicamente"
-            :error="campoError('ubicacion_url')"
-          />
+          <!-- Link Google Maps con botón de geolocalización -->
+          <div class="geo-field">
+            <span class="geo-field__label">Link Google Maps</span>
+            <div class="geo-field__row">
+              <input
+                v-model="form.ubicacion_url"
+                class="geo-field__input"
+                :class="{ 'has-error': campoError('ubicacion_url') || errorGeo }"
+                type="text"
+                maxlength="500"
+                placeholder="https://maps.google.com/…"
+                aria-label="Link Google Maps"
+              />
+              <button
+                type="button"
+                class="geo-field__btn"
+                :disabled="geolocalizando"
+                @click="usarUbicacion"
+              >
+                <svg v-if="!geolocalizando" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="8" cy="7" r="2.5" stroke="currentColor" stroke-width="1.25"/>
+                  <path d="M8 1v1.5M8 11.5V13M1 7h1.5M11.5 7H13" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+                  <path d="M8 11.5C8 11.5 3.5 8.5 3.5 5.5a4.5 4.5 0 0 1 9 0c0 3-4.5 6-4.5 6z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>
+                </svg>
+                <svg v-else width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" class="spin">
+                  <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" stroke-dasharray="28" stroke-dashoffset="10"/>
+                </svg>
+                {{ geolocalizando ? 'Localizando…' : 'Mi ubicación' }}
+              </button>
+            </div>
+            <span v-if="campoError('ubicacion_url')" class="geo-field__error">{{ campoError('ubicacion_url') }}</span>
+            <span v-else-if="errorGeo" class="geo-field__error">{{ errorGeo }}</span>
+            <span v-else class="geo-field__hint">Referencia que permita ubicar el centro físicamente</span>
+          </div>
           <TextField
             v-model="form.contacto"
             label="Teléfono del centro (opcional)"
@@ -590,4 +639,66 @@ onMounted(async () => {
   transition: background 0.15s;
 }
 .done__btn:hover { background: #1d4ed8; }
+
+/* Campo geolocalización */
+.geo-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.geo-field__label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+.geo-field__row {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.geo-field__input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  font-size: var(--fs-base);
+  color: var(--c-text);
+  transition: border-color 0.15s;
+}
+.geo-field__input:focus {
+  border-color: var(--c-primary-500);
+  outline: none;
+}
+.geo-field__input.has-error { border-color: var(--c-danger); }
+.geo-field__btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-3);
+  background: #e6f2fe;
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  color: #2563eb;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s;
+}
+.geo-field__btn:hover:not(:disabled) { border-color: #2563eb; }
+.geo-field__btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.geo-field__error {
+  font-size: var(--fs-xs);
+  color: var(--c-danger);
+}
+.geo-field__hint {
+  font-size: var(--fs-xs);
+  color: var(--c-text-faint);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.8s linear infinite; transform-origin: center; }
 </style>
