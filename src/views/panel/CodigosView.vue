@@ -69,42 +69,28 @@ onMounted(async () => {
       <!-- Volver -->
       <button class="back" type="button" @click="router.push({ name: 'panel-centro' })">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
         </svg>
         Volver
       </button>
 
-      <!-- Encabezado + botón crear -->
-      <div class="encabezado">
-        <h1 class="encabezado__titulo">Administrar Voluntarios</h1>
-        <button class="btn-crear" type="button" @click="router.push({ name: 'panel-codigos-crear' })">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          Crear voluntario
-        </button>
-      </div>
+      <h1 class="encabezado__titulo">Administrar Voluntarios</h1>
 
       <!-- Buscador card -->
       <div class="buscar-card">
-        <h2 class="buscar-card__titulo">Buscar voluntarios</h2>
         <div class="buscar__field">
           <svg class="buscar__icon" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" />
+            <path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
-          <input
-            v-model="busqueda"
-            class="buscar__input"
-            type="text"
-            placeholder="..."
-            aria-label="Buscar voluntarios"
-          />
+          <input v-model="busqueda" class="buscar__input" type="text" placeholder="Buscar voluntarios"
+            aria-label="Buscar voluntarios" />
         </div>
         <button class="btn-buscar" type="button">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" />
+            <path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
           Buscar
         </button>
@@ -113,29 +99,14 @@ onMounted(async () => {
       <!-- Spinner / Error -->
       <AppSpinner v-if="cargando" label="Cargando voluntarios…" />
 
-      <EmptyState
-        v-else-if="error"
-        icon="⚠"
-        tone="error"
-        title="Error"
-        :description="error"
-      />
+      <EmptyState v-else-if="error" icon="⚠" tone="error" title="Error" :description="error" />
 
-      <EmptyState
-        v-else-if="!filtrados.length"
-        icon="👤"
-        title="Sin voluntarios"
-        description="No hay voluntarios registrados aún."
-      />
+      <EmptyState v-else-if="!filtrados.length" icon="👤" title="Sin voluntarios"
+        description="No hay voluntarios registrados aún." />
 
       <!-- Lista de voluntarios -->
       <div v-else class="lista">
-        <article
-          v-for="c in filtrados"
-          :key="c.id"
-          class="vol-card"
-          :class="{ 'vol-card--revocado': c.revocado_en }"
-        >
+        <article v-for="c in filtrados" :key="c.id" class="vol-card" :class="{ 'vol-card--revocado': c.revocado_en }">
           <div class="vol__info">
             <p class="vol__nombre">{{ c.etiqueta || 'Sin etiqueta' }}</p>
             <p v-if="fechaCreacion(c)" class="vol__fecha">
@@ -145,31 +116,12 @@ onMounted(async () => {
           </div>
 
           <div v-if="!c.revocado_en" class="vol__acciones">
-            <!-- Eliminar -->
-            <button
-              class="btn-eliminar"
-              type="button"
-              :disabled="revocando === c.id"
-              @click="eliminar(c)"
-            >
+            <button class="btn-revocar" type="button" :disabled="revocando === c.id" @click="eliminar(c)">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M2 4h12M5.333 4V2.667h5.334V4M6.667 7.333v4M9.333 7.333v4M3.333 4l.667 9.333h8L12.667 4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 4h12M5.333 4V2.667h5.334V4M6.667 7.333v4M9.333 7.333v4M3.333 4l.667 9.333h8L12.667 4"
+                  stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
-              {{ revocando === c.id ? '…' : 'Eliminar' }}
-            </button>
-
-            <!-- Compartir — deshabilitado: el código solo se muestra al crearlo -->
-            <button
-              class="btn-compartir"
-              type="button"
-              disabled
-              title="El código solo puede compartirse al momento de creación"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M8 2v9M8 2L5.5 4.5M8 2l2.5 2.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M3 8v5a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
-              </svg>
-              Compartir
+              {{ revocando === c.id ? '…' : 'Revocar' }}
             </button>
           </div>
         </article>
@@ -184,6 +136,7 @@ onMounted(async () => {
   min-height: 100vh;
   background: var(--c-surface);
 }
+
 .wrap {
   display: flex;
   flex-direction: column;
@@ -206,37 +159,17 @@ onMounted(async () => {
   cursor: pointer;
   align-self: flex-start;
 }
-.back:hover { border-color: #2563eb; }
+
+.back:hover {
+  border-color: #2563eb;
+}
 
 /* Encabezado */
-.encabezado {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  flex-wrap: wrap;
-}
 .encabezado__titulo {
   font-size: var(--fs-xl);
   font-weight: var(--fw-bold);
   color: var(--c-text);
 }
-.btn-crear {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-4);
-  background: #2563eb;
-  border: none;
-  border-radius: var(--r-lg);
-  color: #fff;
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
-  cursor: pointer;
-  transition: background 0.15s;
-  white-space: nowrap;
-}
-.btn-crear:hover { background: #1d4ed8; }
 
 /* Buscador card */
 .buscar-card {
@@ -249,14 +182,17 @@ onMounted(async () => {
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-md);
 }
+
 .buscar-card__titulo {
   font-size: var(--fs-xl);
   font-weight: var(--fw-bold);
   color: var(--c-text);
 }
+
 .buscar__field {
   position: relative;
 }
+
 .buscar__icon {
   position: absolute;
   left: var(--sp-4);
@@ -265,6 +201,7 @@ onMounted(async () => {
   color: var(--c-text-faint);
   pointer-events: none;
 }
+
 .buscar__input {
   width: 100%;
   padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) + 18px + var(--sp-2));
@@ -274,7 +211,12 @@ onMounted(async () => {
   font-size: var(--fs-base);
   color: var(--c-text);
 }
-.buscar__input:focus { outline: none; box-shadow: 0 0 0 2px #2563eb40; }
+
+.buscar__input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #2563eb40;
+}
+
 .btn-buscar {
   display: flex;
   align-items: center;
@@ -290,7 +232,10 @@ onMounted(async () => {
   font-weight: var(--fw-semibold);
   cursor: pointer;
 }
-.btn-buscar:hover { background: #1d4ed8; }
+
+.btn-buscar:hover {
+  background: #1d4ed8;
+}
 
 /* Lista */
 .lista {
@@ -311,7 +256,10 @@ onMounted(async () => {
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-md);
 }
-.vol-card--revocado { opacity: 0.55; }
+
+.vol-card--revocado {
+  opacity: 0.55;
+}
 
 .vol__info {
   display: flex;
@@ -319,15 +267,18 @@ onMounted(async () => {
   gap: var(--sp-1);
   min-width: 0;
 }
+
 .vol__nombre {
   font-size: var(--fs-base);
   font-weight: var(--fw-bold);
   color: var(--c-text);
 }
+
 .vol__fecha {
   font-size: var(--fs-sm);
   color: var(--c-text-muted);
 }
+
 .vol__revocado {
   font-size: var(--fs-xs);
   color: var(--c-danger);
@@ -341,8 +292,8 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-/* Botón eliminar */
-.btn-eliminar {
+/* Botón revocar */
+.btn-revocar {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1);
@@ -357,23 +308,13 @@ onMounted(async () => {
   transition: background 0.15s;
   white-space: nowrap;
 }
-.btn-eliminar:hover:not(:disabled) { background: #fee2e2; }
-.btn-eliminar:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* Botón compartir */
-.btn-compartir {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-1);
-  padding: var(--sp-2) var(--sp-3);
-  background: #e6f2fe;
-  border: none;
-  border-radius: var(--r-lg);
-  color: #2563eb;
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
-  cursor: not-allowed;
+.btn-revocar:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.btn-revocar:disabled {
   opacity: 0.6;
-  white-space: nowrap;
+  cursor: not-allowed;
 }
 </style>
