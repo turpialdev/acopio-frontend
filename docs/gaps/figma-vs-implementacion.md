@@ -1,7 +1,7 @@
 # Figma vs Implementación — Análisis visual por pantalla
 
 Archivo Figma: `ZmoaSYrWYT9BYhchRsmEwX` (Centro de acopio)  
-Fecha de revisión: 2026-06-26  
+Fecha de revisión: 2026-06-26 · Actualizado: 2026-06-27 (sesión de rediseño)
 Secciones: Público · Responsable de centro · Moderadores
 
 > **Convenciones:** ✅ Correcto · ⚠️ Diferencia menor · ❌ Faltante o incorrecto
@@ -157,13 +157,13 @@ Banner en la parte superior:
 
 | Elemento | Estado | Detalle |
 |----------|--------|---------|
-| Layout del menú | ❌ | Figma usa **lista vertical** de ítems. Código usa una **grilla 2×2** de botones — layout completamente diferente |
-| "Añadir necesidad" como ítem | ❌ | En Figma es una opción del menú que lleva a pantalla separada (`R3-insumos`). En código, las necesidades se editan dentro de `FichaEditView` |
-| "Crear Voluntario" como ítem | ❌ | Figma lo muestra como acción directa en el menú. En código es parte de `CodigosView` |
-| "Administrar Voluntarios" como ítem separado | ❌ | Figma separa "Crear" de "Administrar". En código es una sola vista |
-| Alerta / sugerencia | ⚠️ | Figma muestra un banner dismissible en la parte superior. En código las sugerencias se muestran como una sección dentro del panel — verificar posición y estilo |
+| Layout del menú | ❌ | Figma usa **lista vertical** de ítems. Código usa una **grilla 2×2** de cards — layout diferente |
+| "Añadir necesidad" como ítem | ❌ | En Figma es una opción del menú que lleva a pantalla separada (`R3-insumos`). En código las necesidades se editan dentro de `FichaEditView` |
+| "Crear Voluntario" como ítem | ✅ | Añadido al menú en `PanelCentroView` → ruta `panel-codigos-crear` |
+| "Administrar Voluntarios" como ítem separado | ✅ | `CodigosView` (lista admin) y `CrearVoluntarioView` (creación) son vistas independientes |
+| Alerta / sugerencia | ⚠️ | Figma muestra un banner dismissible. En código las sugerencias se muestran como sección dentro del panel |
 | "Ver Reporte de insumos" | ⚠️ | En Figma aparece destacado con fondo azul claro. En código es un botón de la grilla |
-| Nombre del centro en el header | ❌ | El panel de Figma no muestra el nombre del centro en la zona de contenido — solo el menú. En código el panel muestra nombre y ubicación |
+| Nombre del centro en el header | ❌ | El panel de Figma no muestra nombre del centro en la zona de contenido — en código el panel lo muestra |
 
 ---
 
@@ -240,9 +240,10 @@ Banner en la parte superior:
 | Elemento | Estado | Detalle |
 |----------|--------|---------|
 | Nombre de las tabs | ⚠️ | Figma: "Ingresar insumos" / "Entregar insumos". Código: "Ingreso de insumos" / "Salida de insumos" — cambiar etiquetas |
+| Layout de tabs con iconos | ✅ | Tabs rediseñados con icono sobre texto, activo en azul sólido |
 | Campo "Descripción" obligatorio | ❌ | Figma marca Descripción con `*`. En código la `nota` es **opcional** — alineado con ADR 0007 pero difiere del diseño |
-| Campo "Cantidad" obligatorio | ⚠️ | Figma marca Cantidad con `*` en ambos tabs. En código es opcional para entrada, obligatoria para salida — verificar si el diseño distingue los tabs |
-| "Ver inventario de insumos" al final | ⚠️ | Figma muestra este link + "Cerrar sesión" fuera de la card. Verificar posición en implementación |
+| Campo "Cantidad" obligatorio | ⚠️ | Figma marca Cantidad con `*`. En código es opcional para entrada, obligatoria para salida |
+| "Ver inventario de insumos" + "Cerrar sesión" al final | ✅ | Implementados fuera de la card, con botón Volver al panel superior |
 
 ---
 
@@ -254,24 +255,27 @@ Banner en la parte superior:
 
 Del overview de Figma se puede observar:
 - Barra de búsqueda con campo texto + botón **Buscar**
-- Listado de movimientos agrupados por fecha con: nombre de insumo, chip ENTRADA/SALIDA, cantidad, fecha/hora
+- Listado de movimientos con: nombre de insumo, chip ENTRADA/SALIDA, cantidad, fecha/hora
 - Botón **"Corregir"** por ítem
 
 #### Gaps
 
 | Elemento | Estado | Detalle |
 |----------|--------|---------|
-| Búsqueda | ✅ | Implementado |
-| Agrupación por fecha | ✅ | HOY / fechas anteriores |
-| Edición inline | ✅ | MovimientoRow con modo editar |
+| Buscador card con título + input + botón Buscar | ✅ | Implementado con shadow-md |
+| Pills de filtro Todo / Ingresos / Egresos | ✅ | Implementados con borde azul inactivo, azul sólido activo |
+| Tarjetas individuales con badge INGRESO/EGRESO | ✅ | `MovimientoRow` rediseñado — verde/rojo, shadow-md |
+| Sección Totales en card | ✅ | Card con border + shadow-md |
+| Edición inline (Corregir) | ✅ | MovimientoRow con modo editar inline |
+| Botón Volver contextual | ✅ | Usa `router.back()` — regresa al origen (panel o inventario) |
 
 ---
 
 ### R6 — Crear Voluntario
 
 **Figma node:** `0:2535`  
-**Archivo Vue:** `src/views/panel/CodigosView.vue`  
-**Ruta:** `/panel/codigos`
+**Archivo Vue:** `src/views/panel/CrearVoluntarioView.vue`  
+**Ruta:** `/panel/codigos/crear`
 
 #### Diseño Figma
 
@@ -280,19 +284,30 @@ Del overview de Figma se puede observar:
 - Campo: **Rol** (dropdown: "Puerta") — _no obligatorio_
 - Botón **"Guardar Voluntario"**
 
+#### Pantalla de éxito (Figma: `crear-voluntario-exitoso`)
+
+- Ícono doble check verde
+- Título: **"Registro exitoso"**
+- Campo readonly con el código generado
+- Botón **"Compartir Código"**
+
 #### Gaps
 
 | Elemento | Estado | Detalle |
 |----------|--------|---------|
-| Campo "Nombre" | ⚠️ | Figma usa "Nombre" del voluntario. Código usa "etiqueta" (texto libre como "Juan – puerta"). Funcionalmente equivalente pero label distinto |
-| Campo "Rol" separado | ❌ | Figma tiene un dropdown de Rol separado del nombre. En código el rol se incluye como parte libre de la etiqueta. Considerar si el "Rol" de Figma es solo descriptivo (etiqueta de posición) o si es el `rol` del sistema |
+| Vista separada de creación | ✅ | `CrearVoluntarioView` con flujo 2 pasos (form → éxito) |
+| Campo "Nombre" | ✅ | Implementado con label "Nombre", placeholder "Jacobo" |
+| Pantalla de éxito con código | ✅ | Código readonly, botón Copiar inline + botón Compartir Código |
+| Ícono check verde | ✅ | SVG doble checkmark del diseño Figma |
+| Campo "Rol" separado | ❌ | Figma tiene dropdown de Rol. En código el rol está incluido en la etiqueta de texto libre — considerar si es posición descriptiva o rol del sistema |
 
 ---
 
 ### R6 editar — Administrar Voluntarios
 
 **Figma node:** `0:2656`  
-**Archivo Vue:** `src/views/panel/CodigosView.vue`
+**Archivo Vue:** `src/views/panel/CodigosView.vue`  
+**Ruta:** `/panel/codigos`
 
 #### Diseño Figma
 
@@ -305,10 +320,12 @@ Del overview de Figma se puede observar:
 
 | Elemento | Estado | Detalle |
 |----------|--------|---------|
-| Código visible en la lista | ❌ | Figma muestra el código en texto plano en la lista. Código lo muestra solo al crear (ADR 0002). Si Figma lo muestra en lista, hay un conflicto con la decisión de seguridad — **mantener la implementación actual** |
-| Botón "Compartir" | ❌ | Figma tiene botón "Compartir" (navigator.share del código). No está en la implementación actual |
-| Botón "Eliminar" vs "Revocar" | ⚠️ | Figma usa "Eliminar". El código usa "Revocar" (correcto según el modelo — el código no se elimina, se revoca) |
-| Búsqueda de voluntarios | ❌ | Figma tiene campo de búsqueda. No implementado |
+| Vista separada de administración | ✅ | `CodigosView` independiente de la creación |
+| Búsqueda de voluntarios | ✅ | Buscador card con input + botón Buscar, filtrado en tiempo real |
+| Fecha de creación | ✅ | Mostrada en formato DD/MM/YYYY si `creado_en` existe |
+| Código visible en la lista | ❌ | Figma muestra código en texto plano — implementación lo omite intencionalmente (ADR 0002). **No cambiar.** |
+| Botón "Compartir" en lista | ❌ | Figma lo tiene; omitido porque no hay código plaintext en la lista (ADR 0002) |
+| Botón "Eliminar" vs "Revocar" | ✅ | Cambiado a "Revocar" — correcto según el modelo de dominio |
 
 ---
 
@@ -425,29 +442,44 @@ Del overview: búsqueda de centros con filtros + lista de resultados con botones
 
 ## Resumen de gaps priorizados
 
+_Actualizado: 2026-06-27_
+
 ### Prioridad alta — afectan flujos mínimos implementados
 
 | # | Pantalla | Gap | Archivo |
 |---|----------|-----|---------|
 | 1 | P1 Directorio | Campo "Horario de recepción" no existe en el modelo | `domain.ts`, backend |
-| 2 | R2 Panel home | Layout lista vertical vs grilla 2×2 | `PanelCentroView.vue` |
-| 3 | R2 Panel home | "Añadir necesidad" como acción separada | `PanelCentroView.vue` + nueva vista |
+| 2 | R2 Panel home | Layout: Figma usa lista vertical; código usa grilla 2×2 de cards | `PanelCentroView.vue` |
+| 3 | R2 Panel home | "Añadir necesidad" como ítem de menú que lleva a pantalla separada | `PanelCentroView.vue` + nueva vista |
 | 4 | R3 Ficha | "Categoría Principal" falta en el editor de ficha | `FichaEditView.vue` |
-| 5 | R4 Inventario | Nombres de tabs: "Ingresar/Entregar insumos" | `InventarioView.vue` |
-| 6 | R6 Voluntarios | Botón "Compartir" código faltante | `CodigosView.vue` |
+| 5 | R4 Inventario | Nombres de tabs: "Ingresar/Entregar insumos" (Figma) vs "Ingreso/Salida" (código) | `InventarioView.vue` |
 
-### Prioridad media — copy / etiquetas
+### Prioridad media — copy / etiquetas / detalles
 
 | # | Pantalla | Gap |
 |---|----------|-----|
-| 7 | R1, R3 | Etiqueta "Rol" → debería ser "Cargo" |
-| 8 | R1 éxito | Verificar copy del subtítulo |
-| 9 | R3-insumos | Urgencia "Alta" vs label `urgente` |
-| 10 | P1 | Texto botón copiar reporte |
+| 6 | R1, R3 | Etiqueta "Rol" en UI → debería ser "Cargo" (modelo de dominio) |
+| 7 | R6 Crear Voluntario | Campo "Rol" (dropdown de posición) no implementado |
+| 8 | R1 éxito | Verificar copy exacto del subtítulo |
+| 9 | R3-insumos | Urgencia label "Alta" vs valor `urgente` |
+| 10 | P1 | Texto exacto del botón copiar reporte |
 
-### Prioridad baja — tickets deseable / sin implementar intencionalmente
+### Prioridad baja — sin implementar intencionalmente o dependientes de backend
 
 | # | Pantalla | Nota |
 |---|----------|------|
-| 11 | R7 Recuperar código | No implementado. Es flujo mediado por moderador — depende de ticket moderación |
-| 12 | M1–M2 Moderación | Todo el panel — ver `docs/gaps/mvp-gaps.md` |
+| 11 | R7 Recuperar código | No implementado. Flujo mediado por moderador — depende de ticket #9 |
+| 12 | R6 Compartir en lista | Omitido por ADR 0002 — el código no existe en el listado |
+| 13 | M1–M2 Moderación | Todo el panel — ver `docs/gaps/mvp-gaps.md` |
+
+### Cerrados en sesión 27/06/2026
+
+| Pantalla | Gap | Resultado |
+|----------|-----|-----------|
+| R2 Panel | "Crear Voluntario" como ítem de menú | ✅ Añadido |
+| R2 Panel | "Administrar Voluntarios" separado de "Crear" | ✅ Vistas independientes |
+| R5 Movimientos | Buscador card, pills, tarjetas individuales, totales card | ✅ Rediseñado |
+| R4 Inventario | Tabs con iconos, botones fuera de card | ✅ Rediseñado |
+| R6 Voluntarios | Búsqueda en lista de voluntarios | ✅ Implementado |
+| R6 Voluntarios | Vista de éxito con código + copiar + compartir | ✅ Implementado |
+| R6 Voluntarios | "Eliminar" → "Revocar" | ✅ Correcto |

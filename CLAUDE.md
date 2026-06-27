@@ -125,6 +125,13 @@ src/
 └── views/          # Page-level components, organised by route group
     ├── auth/       # Login pages (codigo, moderador)
     ├── panel/      # Authenticated centro management
+    │   ├── PanelCentroView.vue       # Main menu for responsable/voluntario
+    │   ├── FichaEditView.vue         # Edit centro ficha + necesidades
+    │   ├── InventarioView.vue        # Register entrada/salida (tabs)
+    │   ├── MovimientosView.vue       # Movement history with search/filter
+    │   ├── CodigosView.vue           # Admin list of volunteer codes (revocar)
+    │   ├── CrearVoluntarioView.vue   # 2-step flow: form → success with code
+    │   └── mod/                      # Moderator sub-views
     └── registro/   # Centro registration flow
 ```
 
@@ -164,3 +171,27 @@ Unauthenticated access to guarded routes redirects to the appropriate login page
 ### Testing
 
 Tests live alongside source in `src/**/__tests__/` directories. Vitest runs in jsdom. There are currently no test files; `--passWithNoTests` keeps CI green.
+
+### Panel views — design patterns (established in session 27/06/2026)
+
+All panel views share the same visual language after the Figma redesign:
+
+- **Back button:** `background: #e6f2fe; color: #2563eb; border-radius: r-lg` — always top-left, `router.back()` where destination is context-dependent, explicit `router.push` where it is always the same.
+- **Cards:** `border: 1px solid var(--c-border); border-radius: var(--r-xl); box-shadow: var(--shadow-md)`.
+- **Primary buttons:** `background: #2563eb; border-radius: var(--r-xl); color: #fff`.
+- **Secondary/ghost buttons:** `background: #e6f2fe; color: #2563eb; border-radius: var(--r-lg)`.
+- **Danger outlined buttons:** `border: 1.5px solid #dc2626; color: #dc2626; background: transparent`.
+- **SVG icons:** always inline in the template as const strings (e.g. `ICON_EDITAR`). Use `fill="currentColor"` when the icon must inherit the button color; use a hardcoded fill (e.g. `fill="#585858"`) for fixed-color icons.
+
+### Volunteer management flow
+
+Split into two routes (both require `responsable`):
+
+- `/panel/codigos/crear` → `CrearVoluntarioView` — step 1: form with `etiqueta` field; step 2: success screen showing the plaintext code (only available once). Has inline "Copiar" button + "Compartir Código" (`navigator.share` with clipboard fallback).
+- `/panel/codigos` → `CodigosView` — admin list with search, volunteer cards showing `etiqueta` + `creado_en`. "Revocar" calls `codigos.revocarCodigo()` and dims the row. Plaintext code is NOT shown in the list (ADR 0002).
+
+`CodigoVoluntario` has `creado_en?: string | null` (added to `domain.ts`). `CodigoCreado extends CodigoVoluntario { codigo: string }` is defined in `src/api/codigos.ts`.
+
+### Geolocation in RegistrarCentroView
+
+The "Link Google Maps" field has a "Mi ubicación" button that calls `navigator.geolocation.getCurrentPosition()` and fills the field with `https://www.google.com/maps?q=LAT,LNG`. The field is implemented as a custom inline block (not `TextField`) to accommodate the button alongside the input. Shows a spinner while locating and an inline error on permission denial or timeout (10 s).

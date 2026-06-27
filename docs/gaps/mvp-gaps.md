@@ -1,14 +1,13 @@
 # MVP Gap Analysis — Acopio Venezuela (Frontend)
 
-Fecha: 2026-06-26  
-Base: tickets en `docs/Centros de Acopio/Acopio Venezuela — Tickets/`, ADRs, ARQUITECTURA.md  
-Metodología: revisión completa del árbol `src/` contra los criterios de aceptación de cada ticket mínimo.
+Fecha: 2026-06-27 (actualizado tras sesión de rediseño Figma)
+Base: tickets en `docs/Centros de Acopio/Acopio Venezuela — Tickets/`, ADRs, ARQUITECTURA.md
 
 ---
 
 ## Resumen ejecutivo
 
-De los 10 tickets del alcance mínimo, **7 están completos** en el frontend y **3 tienen gaps** que bloquean el MVP. Adicionalmente hay **2 riesgos transversales** que afectan el cumplimiento de ADRs vinculantes, independientemente del estado de los tickets.
+De los 10 tickets del alcance mínimo, **7 están completos** en el frontend y **3 tienen gaps** que bloquean el MVP. Adicionalmente hay **2 riesgos transversales** que afectan el cumplimiento de ADRs vinculantes.
 
 | Ticket | Nombre | Estado |
 |--------|--------|--------|
@@ -22,6 +21,23 @@ De los 10 tickets del alcance mínimo, **7 están completos** en el frontend y *
 | #8 | Reportar un centro (público) → cola | ❌ Sin UI |
 | #9 | Moderación — núcleo | ❌ Stub vacío |
 | #10 | Moderación — administración | ❌ Stub vacío |
+
+---
+
+## Cambios en esta sesión (27/06/2026)
+
+Las siguientes vistas fueron completamente rediseñadas para alinear con Figma:
+
+- `TextField` y `SelectField` — nueva estética de campos del sistema
+- `FichaEditView` — formato de tarjeta plana con divisores por sección
+- `PanelCentroView` — iconos SVG actualizados, botón "Crear Voluntario" añadido al menú
+- `InventarioView` — tabs con iconos, layout de formulario entrada/salida
+- `MovimientosView` — buscador card, pills de filtro, tarjetas individuales con shadow, totales en card
+- `MovimientoRow` — tarjeta individual con badge INGRESO/EGRESO, botón Corregir
+- `CodigosView` — reescrito como lista admin con buscador y botón Revocar
+- `CrearVoluntarioView` — nuevo (flujo 2 pasos: formulario → pantalla de éxito con código + copiar + compartir)
+- `RegistrarCentroView` — botón de geolocalización en campo "Link Google Maps"
+- Footer — texto cambiado a "Centros de Acopio - Comunidad Pádel"
 
 ---
 
@@ -66,15 +82,15 @@ El login de moderador (`ModeradorLoginView.vue`) sí está completo y la sesión
 
 **Qué construir:**
 
-1. **Cola de verificación:** Listar centros con `estado_verificacion = sin_verificar` (el endpoint `centros.listarCentros()` ya acepta filtros; verificar si el backend expone este filtro para el moderador o si hace falta un endpoint específico). Por cada centro: botón "Verificar" → PATCH `estado_verificacion: verificado`, botón "Ocultar" → PATCH `estado_verificacion: oculto`.
+1. **Cola de verificación:** Listar centros con `estado_verificacion = sin_verificar`. Por cada centro: botón "Verificar" → PATCH `estado_verificacion: verificado`, botón "Ocultar" → PATCH `estado_verificacion: oculto`.
 
-2. **Cola de reportes:** Requiere un endpoint backend (`GET /api/reportes/` o similar, pendiente de confirmar) para listar los reportes recibidos. UI: lista de reportes con motivo, detalle, link al centro afectado, botón "Marcar resuelto".
+2. **Cola de reportes:** Endpoint backend pendiente (`GET /api/reportes/`). UI: lista de reportes con motivo, detalle, link al centro afectado, botón "Marcar resuelto".
 
-3. **Crear centros verificados:** Formulario equivalente al de `RegistrarCentroView.vue` pero sin el paso del código raíz y con `estado_verificacion: verificado` de nacimiento. El moderador no recibe código raíz.
+3. **Crear centros verificados:** Formulario equivalente a `RegistrarCentroView.vue` sin el paso del código raíz, con `estado_verificacion: verificado` de nacimiento.
 
-4. **Editar cualquier centro:** Reutilizar o adaptar `FichaEditView.vue` permitiendo al moderador editar cualquier centro (no solo el propio), incluyendo `estado_verificacion`.
+4. **Editar cualquier centro:** Reutilizar o adaptar `FichaEditView.vue` permitiendo al moderador editar cualquier centro, incluyendo `estado_verificacion`.
 
-5. **Gestión de cuentas de moderador:** Listar cuentas, crear nueva (nombre + email + contraseña), desactivar. Requiere endpoints backend (pendiente de confirmar).
+5. **Gestión de cuentas de moderador:** Listar, crear (nombre + email + contraseña), desactivar. Endpoints backend pendientes.
 
 ---
 
@@ -90,50 +106,73 @@ El login de moderador (`ModeradorLoginView.vue`) sí está completo y la sesión
 
 **Qué construir:**
 
-1. **Fusionar duplicados:** UI para seleccionar dos centros y designar cuál es el principal. El backend resuelve la fusión; el frontend necesita un selector de búsqueda por nombre y una confirmación destructiva.
+1. **Fusionar duplicados:** Selector de dos centros por nombre + confirmación destructiva. El backend resuelve la fusión.
 
-2. **Reemitir/revocar código raíz:** Formulario de búsqueda del centro, botón "Reemitir código raíz" con confirmación. El nuevo código debe mostrarse una sola vez igual que en el alta (ADR 0002). "Revocar" deja el centro sin acceso hasta que se reemita.
+2. **Reemitir/revocar código raíz:** Búsqueda del centro, botón "Reemitir código raíz" con confirmación. El nuevo código debe mostrarse una sola vez (igual que en `CrearVoluntarioView`).
 
-3. **Gestión del catálogo:** Tabla editable de categorías con columnas nombre, `es_insumo` (checkbox), `activa` (toggle). Acciones: nueva categoría (nombre + es_insumo), marcar inactiva. El endpoint `catalogo.listarCategorias()` ya existe; se necesitan endpoints de escritura en el backend (POST/PATCH/DELETE `/api/catalogo/`).
+3. **Gestión del catálogo:** Tabla de categorías con nombre, `es_insumo` (checkbox), `activa` (toggle). Nueva categoría, marcar inactiva. Endpoints de escritura backend pendientes (POST/PATCH/DELETE `/api/catalogo/`).
+
+---
+
+## Gaps visuales Figma vs implementación pendientes
+
+Los siguientes gaps de diseño fueron identificados en `docs/gaps/figma-vs-implementacion.md` y siguen sin resolver tras la sesión de rediseño:
+
+| # | Pantalla | Gap | Archivo |
+|---|----------|-----|---------|
+| 1 | P1 Directorio | Campo "Horario de recepción" no está en el modelo de datos | `domain.ts`, backend |
+| 2 | R2 Panel home | Layout: Figma usa lista vertical plana; código usa grilla 2×2 de cards | `PanelCentroView.vue` |
+| 3 | R2 Panel home | "Añadir necesidad" como ítem de menú separado (Figma) vs inline en FichaEdit (código) | Nueva vista pendiente |
+| 4 | R3 Ficha | Campo "Categoría Principal" no está en `FichaEditView` | `FichaEditView.vue` |
+| 5 | R4 Inventario | Nombres de tabs: Figma dice "Ingresar insumos" / "Entregar insumos"; código dice "Ingreso" / "Salida" | `InventarioView.vue` |
+| 6 | R1, R3 | Etiqueta "Rol" (Figma) debería ser "Cargo" (modelo de dominio) | `RegistrarCentroView.vue`, `FichaEditView.vue` |
+| 7 | R7 Recuperar código | Pantalla no existe; el botón en AccederView no tiene destino | Nueva vista pendiente |
+
+**Resueltos en esta sesión:**
+
+| # | Pantalla | Gap | Estado |
+|---|----------|-----|--------|
+| ✅ | R2 Panel | "Crear Voluntario" como ítem del menú | Añadido a `PanelCentroView` |
+| ✅ | R2 Panel | "Administrar Voluntarios" como vista separada | `CodigosView` separado de `CrearVoluntarioView` |
+| ✅ | R6 Voluntarios | Búsqueda de voluntarios | Buscador implementado en `CodigosView` |
+| ✅ | R5 Movimientos | Buscador card, pills de filtro, tarjetas con shadow | `MovimientosView` rediseñado |
+| ✅ | R4 Inventario | Tabs con iconos, formularios separados entrada/salida | `InventarioView` rediseñado |
+| ⚠️ | R6 Voluntarios | Botón "Compartir" código | Disponible solo en pantalla de éxito al crear (ADR 0002 — no en el listado) |
 
 ---
 
 ## Riesgos transversales
 
-Estos puntos no son gaps de un ticket específico sino riesgos que afectan el cumplimiento de ADRs vinculantes.
-
 ---
 
 ### Riesgo 1 — Directorio legible sin JavaScript (ADR 0003, crítico)
 
-**ADR 0003 establece como criterio vinculante:** "El Directorio se ve y se puede leer/buscar aunque el JS no cargue o falle."
+**ADR 0003 establece:** "El Directorio se ve y se puede leer/buscar aunque el JS no cargue o falle."
 
-**Situación actual:** El frontend es una SPA de Vue 3 compilada con Vite. Sin JS, el HTML inicial es una página vacía con solo `<div id="app"></div>`. El Directorio no es visible ni navegable sin JavaScript.
+**Situación:** El frontend es una SPA de Vue 3. Sin JS, el HTML inicial es `<div id="app"></div>`. El Directorio no es navegable sin JavaScript.
 
-**Impacto:** Este criterio está marcado como el que "más pesa en red mala" (ADR 0003). Incumplirlo significa que en condiciones de red degradada — el contexto real de uso — el directorio puede quedar en blanco.
-
-**Opciones para resolverlo:**
+**Opciones:**
 - SSR / SSG del Directorio público (Nuxt, Vite SSR, o build estático con datos sembrados).
-- Renderizado en servidor del HTML de la lista desde el backend, con el SPA de Vue montado encima (hydration progresiva).
-- Separar el Directorio en una ruta servida por el backend con render tradicional, dejando el SPA solo para los paneles autenticados.
+- Renderizado en servidor desde el backend con hydration progresiva.
+- Separar el Directorio en ruta servida por el backend, dejando el SPA solo para paneles autenticados.
 
-**Acción requerida:** Decisión de arquitectura antes de declarar el ticket #1 y #3 completos según ADR 0003. Actualmente el frontend no cumple este criterio.
+**Acción requerida:** Decisión de arquitectura antes de declarar el MVP listo según ADR 0003.
 
 ---
 
 ### Riesgo 2 — Presupuesto de rendimiento no validado (ADR 0003)
 
-**ADR 0003 fija umbrales medibles:** ≤ ~170 KB comprimido en primera carga, FCP ≤ ~1,8 s, LCP ≤ ~2,5 s, en perfil Slow 4G / Android gama media-baja.
+**ADR 0003 fija:** ≤ ~170 KB comprimido en primera carga, FCP ≤ ~1,8 s, LCP ≤ ~2,5 s en Slow 4G / Android gama media-baja.
 
-**Situación actual:** No existe ningún resultado de medición (Lighthouse, WebPageTest, `vite-bundle-visualizer`) en el repositorio. No se sabe si el bundle actual cumple el presupuesto.
+El bundle actual del Directorio (`DirectorioView` + `index`) es ~37 KB gzip, dentro del presupuesto. No se ha medido con Lighthouse en condiciones reales de red.
 
-**Acción requerida:** Ejecutar al menos una medición con Lighthouse en Slow 4G sobre la build de producción antes de declarar el MVP listo. Si el resultado supera los umbrales, revisar el bundle (fuentes, dependencias, code-splitting).
+**Acción requerida:** Ejecutar Lighthouse en Slow 4G sobre la build de producción antes de declarar MVP.
 
 ---
 
 ### Riesgo 3 — Formato del reporte copiable (Ticket #5)
 
-**Situación:** `CentroCard.vue` tiene un botón de compartir que usa `navigator.share` con fallback a clipboard. No se ha verificado que el texto generado siga el formato exacto definido en ARQUITECTURA.md §5:
+`CentroCard.vue` tiene un botón de compartir con `navigator.share` + fallback clipboard. No se ha verificado que el texto generado siga el formato exacto definido en ARQUITECTURA.md §5:
 
 ```
 CENTRO: <nombre>
@@ -148,7 +187,7 @@ NECESIDADES:
 Actualizado: <fecha y hora>
 ```
 
-**Acción requerida:** Leer el bloque de generación del texto en `CentroCard.vue` y compararlo campo por campo contra la spec. Corregir si hay diferencias. Este formato es el "puente hacia quien no puede abrir el sitio" y debe ser exacto para ser útil en WhatsApp/SMS.
+**Acción requerida:** Comparar la generación del texto en `CentroCard.vue` campo por campo contra la spec.
 
 ---
 
@@ -159,16 +198,20 @@ Riesgo 1 (decisión de arquitectura — SSR/no-SSR)
 │
 ├── si requiere refactor: refactorizar antes de continuar
 │
-Ticket #8 — UI de reportar centro        [~1 día, autónomo]
+Gap visual #3 (Añadir necesidad — vista separada)    [~0.5 días]
+Gap visual #4 (Categoría Principal en FichaEdit)     [~0.5 días]
+Gap visual #7 (Recuperar código — pantalla R7)       [~0.5 días]
 │
-Ticket #9 — Moderación núcleo            [~3-4 días]
+Ticket #8 — UI de reportar centro                    [~1 día, autónomo]
+│
+Ticket #9 — Moderación núcleo                        [~3-4 días]
 │   └── confirmar endpoints backend (reportes, cuentas de moderador)
 │
-Ticket #10 — Moderación administración   [~2-3 días]
+Ticket #10 — Moderación administración               [~2-3 días]
 │   └── confirmar endpoints backend (fusión, reemisión, CRUD catálogo)
 │
-Riesgo 2 — Medición de rendimiento       [~0.5 días, al final]
-Riesgo 3 — Verificar formato reporte     [~0.5 días, autónomo]
+Riesgo 2 — Medición de rendimiento                   [~0.5 días, al final]
+Riesgo 3 — Verificar formato reporte                 [~0.5 días, autónomo]
 ```
 
-Los tickets #8, Riesgo 2 y Riesgo 3 son independientes y pueden hacerse en paralelo mientras se trabaja la moderación.
+Los tickets #8, Riesgo 2, Riesgo 3 y los gaps visuales menores son independientes y pueden hacerse en paralelo mientras se trabaja la moderación.
